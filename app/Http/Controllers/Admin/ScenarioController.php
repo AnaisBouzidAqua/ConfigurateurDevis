@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Question;
 use App\Models\Scenario;
 use Illuminate\Http\Request;
 
@@ -27,23 +28,19 @@ class ScenarioController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-        ]);
-
-        Scenario::create($validated);
-
-        return redirect()->route('admin.scenarios.index')->with('success', 'Scenario created successfully.');
-    }
+    public function store(Request $request) {}
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Scenario $scenario)
     {
-        //
+        $scenario->load(['rubriques', 'conditions.question', 'conditions.questionOption', 'produits']);
+
+        return inertia('admin/scenarios/show', [
+            'scenario' => $scenario,
+            'questions' => Question::with('options')->get(),
+        ]);
     }
 
     /**
