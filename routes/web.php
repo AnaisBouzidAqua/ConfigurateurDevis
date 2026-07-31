@@ -20,9 +20,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/rubriques/{rubrique}/duplicate', [RubriqueController::class, 'duplicate'])->name('rubriques.duplicate');
     Route::delete('/rubriques/{rubrique}', [RubriqueController::class, 'destroy'])->name('rubriques.destroy');
 
-    Route::get('/rubriques/{rubrique}/questions/create', [QuestionController::class, 'create'])->name('rubriques.questions.create');
     Route::post('/rubriques/{rubrique}/questions', [QuestionController::class, 'store'])->name('rubriques.questions.store');
-
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
