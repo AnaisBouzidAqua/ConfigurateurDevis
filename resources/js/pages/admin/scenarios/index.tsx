@@ -63,3 +63,7 @@ export default function Index({ scenarios }: Props) {
         </>
     );
 }
+
+Index.layout = {
+    breadcrumbs: [{ title: 'Scénarios', href: '/admin/scenarios' }],
+};
