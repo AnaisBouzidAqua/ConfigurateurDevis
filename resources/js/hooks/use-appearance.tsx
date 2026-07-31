@@ -37,8 +37,11 @@ const getStoredAppearance = (): Appearance => {
     return (localStorage.getItem('appearance') as Appearance) || 'system';
 };
 
-const isDarkMode = (appearance: Appearance): boolean => {
-    return appearance === 'dark' || (appearance === 'system' && prefersDark());
+const isDarkMode = (_appearance: Appearance): boolean => {
+    // Dark mode disabled for this app: no dark-mode design exists yet
+    // (only the light-themed AquaConnect mockups), so we always render light
+    // regardless of the user's system/browser preference.
+    return false;
 };
 
 const applyTheme = (appearance: Appearance): void => {

@@ -1,12 +1,13 @@
-import { Head, useForm } from '@inertiajs/react';
-import InputError from '@/components/input-error';
+import { Head, Link} from '@inertiajs/react';
+import { Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Scenario {
     id: number;
+    famille: string | null;
     nom: string;
+    updated_at: string;
 }
 
 interface Props {
@@ -14,52 +15,50 @@ interface Props {
 }
 
 export default function Index({ scenarios }: Props) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        nom: '',
-    });
-
-    function handleSubmit(e: React.FormEvent) {
-        e.preventDefault();
-        post('/admin/scenarios', {
-            onSuccess: () => reset(),
-        });
-    }
-
     return (
         <>
             <Head title="Scénarios" />
 
             <div className="flex flex-col gap-6 p-4">
-                <h1 className="text-2xl font-semibold">Scénarios</h1>
 
                 {scenarios.length === 0 ? (
                     <p className="text-muted-foreground">Aucun scénario pour l'instant.</p>
                 ) : (
-                    <ul className="divide-y rounded-md border">
+                    <div className="mx-auto grid w-fit grid-cols-1 gap-4 sm:grid-cols-2">
+
                         {scenarios.map((scenario) => (
-                            <li key={scenario.id} className="px-4 py-2">
-                                {scenario.nom}
-                            </li>
+                            <Card key={scenario.id} className="relative">
+                                <Link
+                                    href={`/admin/scenarios/${scenario.id}`}
+                                    className="text-muted-foreground hover:text-foreground absolute top-4 right-4"
+                                    aria-label={`Aperçu de ${scenario.nom}`}
+                                >
+                                    <Eye className="size-4" />
+                                </Link>
+                                <CardHeader className="text-center">
+                                    {scenario.famille && (
+                                        <p className="text-sm font-semibold" style={{ color: '#64748B' }}>
+                                            {scenario.famille}
+                                        </p>
+                                    )}
+                                    <CardTitle>{scenario.nom}</CardTitle>
+                                </CardHeader>
+
+                                <CardContent className="flex justify-center">
+                                    <Link href={`/admin/scenarios/${scenario.id}`}>
+                                        <Button className="rounded-full">Éditer</Button>
+                                    </Link>
+                                </CardContent>
+                                <CardFooter className="justify-center">
+                                    <span className="text-sm" style={{ color: '#CBD5E1' }}>
+                                        Dernière mise à jour :{' '}
+                                        {new Date(scenario.updated_at).toLocaleDateString('fr-FR')}
+                                    </span>
+                                </CardFooter>
+                            </Card>
                         ))}
-                    </ul>
-                )}
-
-                <form onSubmit={handleSubmit} className="flex items-end gap-3">
-                    <div className="grid gap-2">
-                        <Label htmlFor="nom">Nom du scénario</Label>
-                        <Input
-                            id="nom"
-                            value={data.nom}
-                            onChange={(e) => setData('nom', e.target.value)}
-                            placeholder="Ex: Installation avec relevage"
-                        />
-                        <InputError message={errors.nom} />
                     </div>
-
-                    <Button type="submit" disabled={processing}>
-                        Créer
-                    </Button>
-                </form>
+                )}
             </div>
         </>
     );
