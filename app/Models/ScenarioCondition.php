@@ -22,5 +22,4 @@ class ScenarioCondition extends Model
     {
         return $this->belongsTo(QuestionOption::class);
     }
-
 }

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Scenario extends Model
 {
-    protected $fillable = ['nom'];
+    protected $fillable = ['famille', 'nom'];
 
     public function conditions()
     {
@@ -18,13 +18,18 @@ class Scenario extends Model
         return $this->hasMany(ScenarioProduit::class);
     }
 
+    public function rubriques()
+    {
+        return $this->hasMany(Rubrique::class);
+    }
+
     /**
      * Determine si ce scenario doit se declencher pour les reponses donnees.
      *
      * @param  array<int, int>  $reponses  Reponses du franchise, au format [question_id => question_option_id].
-     * @return bool  true seulement si TOUTES les conditions du scenario sont satisfaites (ET logique).
-     *               Un scenario sans aucune condition ne se declenche jamais (evite un scenario
-     *               mal configure qui matcherait tout le temps).
+     * @return bool true seulement si TOUTES les conditions du scenario sont satisfaites (ET logique).
+     *              Un scenario sans aucune condition ne se declenche jamais (evite un scenario
+     *              mal configure qui matcherait tout le temps).
      */
     public function correspond(array $reponses): bool
     {
@@ -42,6 +47,4 @@ class Scenario extends Model
 
         return true;
     }
-
-
 }

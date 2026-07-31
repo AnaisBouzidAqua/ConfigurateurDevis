@@ -11,8 +11,8 @@ class MoteurScenarios
      * Determine quels scenarios se declenchent pour les reponses d'un franchise.
      *
      * @param  array<int, int>  $reponses  Reponses du franchise, au format [question_id => question_option_id].
-     * @return Collection<int, Scenario>  Les scenarios declenches (conditions et produits deja charges),
-     *                                    pas encore les produits agreges — voir l'etape suivante.
+     * @return Collection<int, Scenario> Les scenarios declenches (conditions et produits deja charges),
+     *                                   pas encore les produits agreges — voir l'etape suivante.
      */
     public function resoudre(array $reponses): Collection
     {
@@ -20,7 +20,6 @@ class MoteurScenarios
             ->get()
             ->filter(fn (Scenario $scenario) => $scenario->correspond($reponses));
     }
-
 
     /**
      * Calcule les produits a ajouter au devis, tous scenarios declenches confondus.
@@ -41,7 +40,4 @@ class MoteurScenarios
             ])
             ->values();
     }
-
 }
-
-
