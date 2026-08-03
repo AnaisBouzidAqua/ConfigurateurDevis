@@ -2,42 +2,76 @@
 
 namespace App\Services;
 
+use App\Models\Question;
+use App\Models\QuestionOption;
 use App\Models\Scenario;
 use Illuminate\Support\Collection;
 
 class MoteurScenarios
 {
     /**
-     * Determine quels scenarios se declenchent pour les reponses d'un franchise.
+     * Parcourt l'arbre de questions du scenario en suivant les reponses
+     * donnees, et calcule les produits a ajouter au devis.
      *
      * @param  array<int, int>  $reponses  Reponses du franchise, au format [question_id => question_option_id].
-     * @return Collection<int, Scenario> Les scenarios declenches (conditions et produits deja charges),
-     *                                   pas encore les produits agreges — voir l'etape suivante.
-     */
-    public function resoudre(array $reponses): Collection
-    {
-        return Scenario::with(['conditions', 'produits'])
-            ->get()
-            ->filter(fn (Scenario $scenario) => $scenario->correspond($reponses));
-    }
-
-    /**
-     * Calcule les produits a ajouter au devis, tous scenarios declenches confondus.
-     * Si plusieurs scenarios ajoutent le meme produit, les quantites sont additionnees
-     * plutot que d'avoir des lignes en double.
-     *
-     * @param  array<int, int>  $reponses
      * @return Collection<int, array{produit_ref: string, quantite: int}>
      */
-    public function produitsDeclenches(array $reponses): Collection
+    public function resoudre(Scenario $scenario, array $reponses): Collection
     {
-        return $this->resoudre($reponses)
-            ->flatMap(fn (Scenario $scenario) => $scenario->produits)
+        $scenario->loadMissing('rubriques.questions.options.produits');
+
+        $questions = $scenario->rubriques->flatMap->questions;
+
+        if ($questions->isEmpty()) {
+            return collect();
+        }
+
+        $questionCourante = $questions->first();
+        $produitsDeclenches = collect();
+        $questionsVisitees = [];
+
+        while ($questionCourante !== null) {
+            if (in_array($questionCourante->id, $questionsVisitees, true)) {
+                break;
+            }
+
+            $questionsVisitees[] = $questionCourante->id;
+
+            $optionChoisie = $questionCourante->options
+                ->firstWhere('id', $reponses[$questionCourante->id] ?? null);
+
+            if ($optionChoisie === null) {
+                break;
+            }
+
+            foreach ($optionChoisie->produits as $produit) {
+                $produitsDeclenches->push($produit);
+            }
+
+            $questionCourante = $this->questionSuivante($questions, $questionCourante, $optionChoisie);
+        }
+
+        return $produitsDeclenches
             ->groupBy('produit_ref')
-            ->map(fn (Collection $produits) => [
-                'produit_ref' => $produits->first()->produit_ref,
-                'quantite' => $produits->sum('quantite'),
+            ->map(fn (Collection $groupe) => [
+                'produit_ref' => $groupe->first()->produit_ref,
+                'quantite' => $groupe->sum('quantite'),
             ])
             ->values();
+    }
+
+    private function questionSuivante(Collection $questions, Question $actuelle, QuestionOption $option): ?Question
+    {
+        if ($option->question_suivante_id !== null) {
+            return $questions->firstWhere('id', $option->question_suivante_id);
+        }
+
+        if ($option->rubrique_suivante_id !== null) {
+            return $questions->firstWhere('rubrique_id', $option->rubrique_suivante_id);
+        }
+
+        $index = $questions->search(fn (Question $q) => $q->id === $actuelle->id);
+
+        return $questions->get($index + 1);
     }
 }
