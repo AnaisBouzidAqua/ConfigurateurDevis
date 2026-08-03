@@ -21,6 +21,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('/rubriques/{rubrique}', [RubriqueController::class, 'destroy'])->name('rubriques.destroy');
 
     Route::post('/rubriques/{rubrique}/questions', [QuestionController::class, 'store'])->name('rubriques.questions.store');
+    Route::post('/questions/{question}/duplicate', [QuestionController::class, 'duplicate'])->name('questions.duplicate');
+    Route::delete('/questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
+    Route::put('/questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

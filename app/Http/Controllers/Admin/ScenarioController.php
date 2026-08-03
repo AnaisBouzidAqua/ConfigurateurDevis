@@ -14,7 +14,8 @@ class ScenarioController extends Controller
      */
     public function index()
     {
-        return inertia('admin/scenarios/index', ['scenarios' => Scenario::all()]);
+        return inertia('admin/scenarios/index', ['scenarios' => Scenario::orderBy('id')->get()]);
+
     }
 
     /**
@@ -35,11 +36,11 @@ class ScenarioController extends Controller
      */
     public function show(Scenario $scenario)
     {
-        $scenario->load(['rubriques.questions', 'conditions.question', 'conditions.questionOption', 'produits']);
+        $scenario->load(['rubriques.questions.options.produits', 'conditions.question', 'conditions.questionOption', 'produits']);
 
         return inertia('admin/scenarios/show', [
             'scenario' => $scenario,
-            'questions' => Question::with('options')->get(),
+            'questions' => Question::with('options.produits')->get(),
         ]);
     }
 

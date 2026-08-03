@@ -8,6 +8,8 @@ class QuestionOption extends Model
 {
     protected $fillable = ['question_id', 'libelle', 'question_suivante_id', 'rubrique_suivante_id'];
 
+    protected $touches = ['question'];
+
     public function question()
     {
         return $this->belongsTo(Question::class);

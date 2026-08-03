@@ -8,6 +8,8 @@ class Rubrique extends Model
 {
     protected $fillable = ['scenario_id', 'titre', 'bulle_infos', 'ordre'];
 
+    protected $touches = ['scenario'];
+
     public function scenario()
     {
         return $this->belongsTo(Scenario::class);
@@ -15,6 +17,7 @@ class Rubrique extends Model
 
     public function questions()
     {
-        return $this->hasMany(Question::class);
+        return $this->hasMany(Question::class)->orderBy('ordre')->orderBy('id');
     }
+
 }

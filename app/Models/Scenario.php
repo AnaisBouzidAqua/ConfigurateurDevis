@@ -18,9 +18,9 @@ class Scenario extends Model
         return $this->hasMany(ScenarioProduit::class);
     }
 
-    public function rubriques()
+   public function rubriques()
     {
-        return $this->hasMany(Rubrique::class);
+        return $this->hasMany(Rubrique::class)->orderBy('ordre')->orderBy('id');
     }
 
     /**
