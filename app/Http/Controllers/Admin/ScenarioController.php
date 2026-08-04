@@ -36,7 +36,7 @@ class ScenarioController extends Controller
      */
     public function show(Scenario $scenario)
     {
-        $scenario->load(['rubriques.questions.options.produits', 'conditions.question', 'conditions.questionOption', 'produits']);
+       $scenario->load('rubriques.questions.options.produits');
 
         return inertia('admin/scenarios/show', [
             'scenario' => $scenario,

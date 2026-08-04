@@ -2,9 +2,7 @@
 
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\RubriqueController;
-use App\Http\Controllers\Admin\ScenarioConditionController;
 use App\Http\Controllers\Admin\ScenarioController;
-use App\Http\Controllers\Admin\ScenarioProduitController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -12,8 +10,6 @@ Route::inertia('/', 'welcome')->name('home');
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/scenarios', [ScenarioController::class, 'index'])->name('scenarios.index');
     Route::get('/scenarios/{scenario}', [ScenarioController::class, 'show'])->name('scenarios.show');
-    Route::post('/scenarios/{scenario}/conditions', [ScenarioConditionController::class, 'store'])->name('scenarios.conditions.store');
-    Route::post('/scenarios/{scenario}/produits', [ScenarioProduitController::class, 'store'])->name('scenarios.produits.store');
     Route::post('/scenarios/{scenario}/rubriques', [RubriqueController::class, 'store'])->name('scenarios.rubriques.store');
 
     Route::put('/rubriques/{rubrique}', [RubriqueController::class, 'update'])->name('rubriques.update');
