@@ -12,4 +12,10 @@ class Scenario extends Model
     {
         return $this->hasMany(Rubrique::class)->orderBy('ordre')->orderBy('id');
     }
+
+    public function devis()
+    {
+        return $this->hasMany(Devis::class);
+    }
+
 }
