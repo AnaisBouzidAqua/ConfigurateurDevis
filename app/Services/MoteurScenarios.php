@@ -18,16 +18,39 @@ class MoteurScenarios
      */
     public function resoudre(Scenario $scenario, array $reponses): Collection
     {
+        return $this->parcourir($scenario, $reponses)['produits'];
+    }
+
+    /**
+     * Les questions atteignables avec les reponses donnees jusqu'ici, dans
+     * l'ordre du parcours — y compris la prochaine question sans reponse,
+     * pour que le franchise sache quoi remplir ensuite.
+     *
+     * @param  array<int, int>  $reponses
+     * @return Collection<int, Question>
+     */
+    public function questionsAccessibles(Scenario $scenario, array $reponses): Collection
+    {
+        return $this->parcourir($scenario, $reponses)['questions'];
+    }
+
+    /**
+     * @param  array<int, int>  $reponses
+     * @return array{produits: Collection<int, array{produit_ref: string, quantite: int}>, questions: Collection<int, Question>}
+     */
+    private function parcourir(Scenario $scenario, array $reponses): array
+    {
         $scenario->loadMissing('rubriques.questions.options.produits');
 
         $questions = $scenario->rubriques->flatMap->questions;
 
         if ($questions->isEmpty()) {
-            return collect();
+            return ['produits' => collect(), 'questions' => collect()];
         }
 
         $questionCourante = $questions->first();
         $produitsDeclenches = collect();
+        $questionsAccessibles = collect();
         $questionsVisitees = [];
 
         while ($questionCourante !== null) {
@@ -36,6 +59,7 @@ class MoteurScenarios
             }
 
             $questionsVisitees[] = $questionCourante->id;
+            $questionsAccessibles->push($questionCourante);
 
             $optionChoisie = $questionCourante->options
                 ->firstWhere('id', $reponses[$questionCourante->id] ?? null);
@@ -51,13 +75,15 @@ class MoteurScenarios
             $questionCourante = $this->questionSuivante($questions, $questionCourante, $optionChoisie);
         }
 
-        return $produitsDeclenches
+        $produits = $produitsDeclenches
             ->groupBy('produit_ref')
             ->map(fn (Collection $groupe) => [
                 'produit_ref' => $groupe->first()->produit_ref,
                 'quantite' => $groupe->sum('quantite'),
             ])
             ->values();
+
+        return ['produits' => $produits, 'questions' => $questionsAccessibles];
     }
 
     private function questionSuivante(Collection $questions, Question $actuelle, QuestionOption $option): ?Question
