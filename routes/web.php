@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\RubriqueController;
 use App\Http\Controllers\Admin\ScenarioController;
+use App\Http\Controllers\Franchise\DevisController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -20,6 +21,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/questions/{question}/duplicate', [QuestionController::class, 'duplicate'])->name('questions.duplicate');
     Route::delete('/questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
     Route::put('/questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
+});
+
+Route::prefix('devis')->name('franchise.devis.')->group(function () {
+    Route::get('/create', [DevisController::class, 'create'])->name('create');
+    Route::post('/', [DevisController::class, 'store'])->name('store');
+    Route::get('/{devis}', [DevisController::class, 'show'])->name('show');
+    Route::post('/{devis}/reponses', [DevisController::class, 'saveReponse'])->name('reponses.store');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
