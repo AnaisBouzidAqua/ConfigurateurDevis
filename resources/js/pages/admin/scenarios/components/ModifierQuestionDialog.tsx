@@ -9,16 +9,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ReponseCard  } from './ReponseCard';
 import type {ReponseData} from './ReponseCard';
-import type { Question, Rubrique } from './RubriquesSection';
+import type { Question, Rubrique, Produit } from './RubriquesSection';
 
 interface ModifierQuestionDialogProps {
     question: Question;
     onClose: () => void;
     rubriques: Rubrique[];
     questions: Question[];
+    produits: Produit[];
+
 }
 
-export function ModifierQuestionDialog({ question, onClose, rubriques, questions }: ModifierQuestionDialogProps) {
+export function ModifierQuestionDialog({ question, onClose, rubriques, questions, produits }: ModifierQuestionDialogProps) {
     const questionForm = useForm({
         texte: question.texte,
         infos_bulle: question.infos_bulle ?? '',
@@ -117,6 +119,7 @@ export function ModifierQuestionDialog({ question, onClose, rubriques, questions
                             reponse={reponse}
                             rubriques={rubriques}
                             questions={questions}
+                            produits={produits}
                             onChange={(changes) => updateReponseAt(index, changes)}
                             onDuplicate={() => duplicateReponse(index)}
                             onRemove={() => removeReponse(index)}

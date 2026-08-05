@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Question;
 use App\Models\Scenario;
+use App\Models\Produit;
 use Illuminate\Http\Request;
 
 class ScenarioController extends Controller
@@ -41,6 +42,7 @@ class ScenarioController extends Controller
         return inertia('admin/scenarios/show', [
             'scenario' => $scenario,
             'questions' => Question::with('options.produits')->get(),
+            'produits' => Produit::orderBy('nom')->get(),
         ]);
     }
 

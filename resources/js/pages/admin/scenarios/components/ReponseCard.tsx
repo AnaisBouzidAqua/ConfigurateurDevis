@@ -4,7 +4,7 @@ import { RequiredMark } from '@/components/required-mark';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { Question, Rubrique } from './RubriquesSection';
+import type { Produit, Question, Rubrique } from './RubriquesSection';
 
 export interface ReponseData {
     libelle: string;
@@ -18,6 +18,7 @@ interface ReponseCardProps {
     reponse: ReponseData;
     rubriques: Rubrique[];
     questions: Question[];
+    produits: Produit[];
     onChange: (changes: Partial<ReponseData>) => void;
     onDuplicate: () => void;
     onRemove: () => void;
@@ -32,6 +33,7 @@ export function ReponseCard({
     reponse,
     rubriques,
     questions,
+    produits,
     onChange,
     onDuplicate,
     onRemove,
@@ -108,7 +110,7 @@ export function ReponseCard({
                                 })
                             }
                             disabled={reponse.question_suivante_id !== ''}
-                            className="rounded-md border px-3 py-1.5 disabled:opacity-50"
+                            className="w-full rounded-md border px-3 py-1.5 disabled:opacity-50"
                         >
                             <option value="">Aucune</option>
                             {rubriques.map((r) => (
@@ -131,7 +133,7 @@ export function ReponseCard({
                                 })
                             }
                             disabled={reponse.rubrique_suivante_id !== ''}
-                            className="rounded-md border px-3 py-1.5 disabled:opacity-50"
+                            className="w-full rounded-md border px-3 py-1.5 disabled:opacity-50"
                         >
                             <option value="">Aucune</option>
                             {questions.map((q) => (
@@ -154,7 +156,7 @@ export function ReponseCard({
                                         key={produitIndex}
                                         className="flex items-center gap-1 rounded-full border py-1 pr-1 pl-3 text-sm"
                                     >
-                                        {produit.quantite} × {produit.produit_ref}
+                                        {produit.quantite} × {produits.find((p) => p.ref === produit.produit_ref)?.nom ?? produit.produit_ref}
                                         <button
                                             type="button"
                                             onClick={() => removeProduit(produitIndex)}
@@ -177,13 +179,21 @@ export function ReponseCard({
                                 <Label htmlFor={`${prefix}_produit_ref`} className="text-xs">
                                     Référence produit
                                 </Label>
-                                <Input
+                                <select
                                     id={`${prefix}_produit_ref`}
                                     value={produitRef}
                                     onChange={(e) => setProduitRef(e.target.value)}
-                                    placeholder="Ex: BAC-5PP"
-                                />
+                                    className="w-full rounded-md border px-3 py-1.5 text-sm"
+                                >
+                                    <option value="">Choisir un produit</option>
+                                    {produits.map((produit) => (
+                                        <option key={produit.id} value={produit.ref}>
+                                            {produit.nom} ({produit.ref})
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
+
                             <div className="grid w-20 shrink-0 gap-1">
                                 <Label htmlFor={`${prefix}_quantite`} className="text-xs">
                                     Qté

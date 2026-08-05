@@ -1,5 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import { ChevronDown, Copy, GripVertical, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, Copy, GripVertical, MoreVertical, Pencil, Trash2, Layers } from 'lucide-react';
 import { useState } from 'react';
 import { DialogIcon } from '@/components/dialog-icon';
 import { RequiredMark } from '@/components/required-mark';
@@ -48,12 +48,20 @@ export interface Rubrique {
     questions: Question[];
 }
 
+export interface Produit {
+    id: number;
+    ref: string;
+    nom: string;
+    prix: number;
+}
+
 interface Props {
     rubriques: Rubrique[];
     questions: Question[];
+    produits: Produit[];
 }
 
-export default function RubriquesSection({ rubriques, questions }: Props) {
+export default function RubriquesSection({ rubriques, questions, produits }: Props) {
     const [editQuestionTarget, setEditQuestionTarget] = useState<Question | null>(null);
     const [deleteQuestionTarget, setDeleteQuestionTarget] = useState<Question | null>(null);
 
@@ -116,7 +124,11 @@ export default function RubriquesSection({ rubriques, questions }: Props) {
     return (
         <section>
             {rubriques.length === 0 ? (
-                <p className="text-muted-foreground">Aucune rubrique pour l'instant.</p>
+                <div className="mx-auto flex max-w-4xl flex-col items-center justify-center gap-2 rounded-md border border-dashed py-16 text-center">
+                    <Layers className="text-muted-foreground/50 size-8" />
+                    <p className="text-muted-foreground text-sm">Aucune section pour l'instant.</p>
+                    <p className="text-muted-foreground text-xs">Clique sur « + Ajouter une section » pour commencer.</p>
+                </div>
             ) : (
                 <ul className="mx-auto flex max-w-4xl flex-col gap-2">
                     {rubriques.map((rubrique) => (
@@ -158,7 +170,7 @@ export default function RubriquesSection({ rubriques, questions }: Props) {
                                                     key={question.id}
                                                     className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
                                                 >
-                                                    <span>{question.texte}</span>
+                                                    <span className="text-[#64748B]">{question.texte}</span>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground">
                                                             <MoreVertical className="size-4" />
@@ -300,6 +312,7 @@ export default function RubriquesSection({ rubriques, questions }: Props) {
                 onClose={() => setQuestionRubrique(null)}
                 rubriques={rubriques}
                 questions={questions}
+                produits={produits}
             />
             {editQuestionTarget && (
                 <ModifierQuestionDialog
@@ -308,6 +321,7 @@ export default function RubriquesSection({ rubriques, questions }: Props) {
                     onClose={() => setEditQuestionTarget(null)}
                     rubriques={rubriques}
                     questions={questions}
+                    produits={produits}
                 />
             )}
 

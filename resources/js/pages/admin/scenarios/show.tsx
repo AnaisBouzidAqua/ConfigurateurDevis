@@ -4,7 +4,14 @@ import { useState } from 'react';
 import { DialogIcon } from '@/components/dialog-icon';
 import { RequiredMark } from '@/components/required-mark';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import RubriquesSection from './components/RubriquesSection';
@@ -17,12 +24,20 @@ interface Scenario {
     rubriques: Rubrique[];
 }
 
+interface Produit {
+    id: number;
+    ref: string;
+    nom: string;
+    prix: number;
+}
+
 interface Props {
     scenario: Scenario;
     questions: Question[];
+    produits: Produit[];
 }
 
-export default function Show({ scenario, questions }: Props) {
+export default function Show({ scenario, questions, produits }: Props) {
     const [rubriqueDialogOpen, setRubriqueDialogOpen] = useState(false);
 
     const rubriqueForm = useForm({
@@ -57,61 +72,92 @@ export default function Show({ scenario, questions }: Props) {
                             <p className="text-xs font-semibold tracking-[0.06em] text-muted-foreground uppercase">
                                 {scenario.famille}
                             </p>
-                            <h1 className="text-xl font-bold">Scénario {scenario.nom}</h1>
+                            <h1 className="text-xl font-bold">
+                                Scénario {scenario.nom}
+                            </h1>
                         </div>
                     </div>
 
-                    <Dialog open={rubriqueDialogOpen} onOpenChange={setRubriqueDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="rounded-full">+ Ajouter une section</Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle className="flex items-center gap-2">
-                                        <DialogIcon icon={Pencil} />
-                                        Ajouter une section
-                                    </DialogTitle>
-                                </DialogHeader>
+                    <Dialog
+                        open={rubriqueDialogOpen}
+                        onOpenChange={setRubriqueDialogOpen}
+                    >
+                        <DialogTrigger asChild>
+                            <Button className="rounded-full">
+                                + Ajouter une section
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                    <DialogIcon icon={Pencil} />
+                                    Ajouter une section
+                                </DialogTitle>
+                            </DialogHeader>
 
-                                <form onSubmit={handleRubriqueSubmit} className="flex flex-col gap-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="titre">
-                                            Titre <RequiredMark />
-                                        </Label>
-                                        <Input
-                                            id="titre"
-                                            value={rubriqueForm.data.titre}
-                                            onChange={(e) => rubriqueForm.setData('titre', e.target.value)}
-                                        />
-                                    </div>
+                            <form
+                                onSubmit={handleRubriqueSubmit}
+                                className="flex flex-col gap-4"
+                            >
+                                <div className="grid gap-2">
+                                    <Label htmlFor="titre">
+                                        Titre <RequiredMark />
+                                    </Label>
+                                    <Input
+                                        id="titre"
+                                        value={rubriqueForm.data.titre}
+                                        onChange={(e) =>
+                                            rubriqueForm.setData(
+                                                'titre',
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                </div>
 
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="bulle_infos">Bulle d'infos</Label>
-                                        <Input
-                                            id="bulle_infos"
-                                            value={rubriqueForm.data.bulle_infos}
-                                            onChange={(e) => rubriqueForm.setData('bulle_infos', e.target.value)}
-                                        />
-                                    </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="bulle_infos">
+                                        Bulle d'infos
+                                    </Label>
+                                    <Input
+                                        id="bulle_infos"
+                                        value={rubriqueForm.data.bulle_infos}
+                                        onChange={(e) =>
+                                            rubriqueForm.setData(
+                                                'bulle_infos',
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                </div>
 
-                                    <DialogFooter>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => setRubriqueDialogOpen(false)}
-                                        >
-                                            Annuler
-                                        </Button>
-                                        <Button type="submit" disabled={rubriqueForm.processing}>
-                                            Créer
-                                        </Button>
-                                    </DialogFooter>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
+                                <DialogFooter>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() =>
+                                            setRubriqueDialogOpen(false)
+                                        }
+                                    >
+                                        Annuler
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={rubriqueForm.processing}
+                                    >
+                                        Créer
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
-                <RubriquesSection rubriques={scenario.rubriques} questions={questions} />
+                <RubriquesSection
+                    rubriques={scenario.rubriques}
+                    questions={questions}
+                    produits={produits}
+                />
             </div>
         </>
     );
@@ -120,6 +166,9 @@ export default function Show({ scenario, questions }: Props) {
 Show.layout = (props: Props) => ({
     breadcrumbs: [
         { title: 'Scénarios', href: '/admin/scenarios' },
-        { title: props.scenario.nom, href: `/admin/scenarios/${props.scenario.id}` },
+        {
+            title: props.scenario.nom,
+            href: `/admin/scenarios/${props.scenario.id}`,
+        },
     ],
 });
