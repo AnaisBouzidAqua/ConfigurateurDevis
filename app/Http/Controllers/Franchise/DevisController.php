@@ -66,6 +66,35 @@ class DevisController extends Controller
     }
 
     /**
+     * Supprime toutes les réponses enregistrées pour ce devis, pour
+     * recommencer le Chiffrage à zéro.
+     */
+    public function clearReponses(Devis $devis)
+    {
+        $devis->reponses()->delete();
+
+        return redirect(route('franchise.devis.show', $devis) . '?tab=chiffrage');
+    }
+
+    /**
+     * Enregistre le coefficient de difficulté et la remise commerciale
+     * saisis manuellement pour ce devis.
+     */
+    public function updateTarification(Request $request, Devis $devis)
+    {
+        $validated = $request->validate([
+            'coefficient_difficulte' => 'required|numeric|min:0',
+            'remise_valeur' => 'nullable|numeric|min:0',
+            'remise_type' => 'nullable|in:montant,pourcentage',
+        ]);
+
+        $devis->update($validated);
+
+        return redirect()->route('franchise.devis.show', $devis);
+    }
+
+
+    /**
      * Affiche le Devis (Dossier + Chiffrage). Recalcule à chaque visite les
      * produits déclenchés par les réponses déjà enregistrées, via
      * MoteurScenarios, résolus en nom/prix via la table produits.
@@ -101,10 +130,27 @@ class DevisController extends Controller
             })->values();
         }
 
+        $totalBase = $resolution->sum(fn (array $ligne) => $ligne['quantite'] * ($ligne['prix'] ?? 0));
+        $totalApresCoefficient = $totalBase * (1 + $devis->coefficient_difficulte);
+
+        $remiseMontant = match ($devis->remise_type) {
+            'pourcentage' => $totalApresCoefficient * ($devis->remise_valeur ?? 0) / 100,
+            default => $devis->remise_valeur ?? 0,
+        };
+
+        $totalHt = max(0, $totalApresCoefficient - $remiseMontant);
+        $totalTva = round($totalHt * 0.20, 2);
+
         return inertia('franchise/devis/show', [
             'devis' => $devis,
             'resolution' => $resolution,
             'visibleQuestionIds' => $visibleQuestionIds,
+            'totaux' => [
+                'total_ht' => round($totalHt, 2),
+                'total_tva' => $totalTva,
+                'total_ttc' => round($totalHt + $totalTva, 2),
+            ],
         ]);
+
     }
 }

@@ -1,5 +1,6 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import ChiffrageTab from './components/ChiffrageTab';
 import DossierFields from './components/DossierFields';
 import Recapitulatif from './components/Recapitulatif';
@@ -47,6 +48,9 @@ interface Devis {
     type_installateur: string | null;
     installateur_agree_nom: string | null;
     type_realisation: string | null;
+    coefficient_difficulte: number;
+    remise_valeur: number | null;
+    remise_type: 'montant' | 'pourcentage' | null;
     scenario: Scenario | null;
     reponses: DevisReponse[];
 }
@@ -58,10 +62,17 @@ interface Ligne {
     prix: number | null;
 }
 
+interface Totaux {
+    total_ht: number;
+    total_tva: number;
+    total_ttc: number;
+}
+
 interface Props {
     devis: Devis;
     resolution: Ligne[];
     visibleQuestionIds: number[];
+    totaux: Totaux;
 }
 
 function toDossierData(devis: Devis) {
@@ -79,7 +90,7 @@ function toDossierData(devis: Devis) {
     };
 }
 
-export default function Show({ devis, resolution, visibleQuestionIds }: Props) {
+export default function Show({ devis, resolution, visibleQuestionIds, totaux }: Props) {
     const initialTab = new URLSearchParams(window.location.search).get('tab') === 'chiffrage' ? 'chiffrage' : 'dossier';
     const [tab, setTab] = useState<'dossier' | 'chiffrage'>(initialTab);
     const [dossierData, setDossierData] = useState(toDossierData(devis));
@@ -132,9 +143,27 @@ export default function Show({ devis, resolution, visibleQuestionIds }: Props) {
                                     visibleQuestionIds={visibleQuestionIds}
                                 />
                             </div>
-                            <Recapitulatif lignes={resolution} />
+                            <div className="flex w-80 shrink-0 flex-col gap-3">
+                                <Recapitulatif
+                                    devisId={devis.id}
+                                    lignes={resolution}
+                                    totaux={totaux}
+                                    coefficientDifficulte={devis.coefficient_difficulte}
+                                    remiseValeur={devis.remise_valeur}
+                                    remiseType={devis.remise_type}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="destructive-outline"
+                                    onClick={() => router.delete(`/devis/${devis.id}/reponses`)}
+                                    className="self-end"
+                                >
+                                    Vider
+                                </Button>
+                            </div>
                         </div>
                     )}
+
                 </div>
             </div>
         </>

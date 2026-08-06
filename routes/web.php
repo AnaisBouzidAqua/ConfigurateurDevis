@@ -28,6 +28,9 @@ Route::prefix('devis')->name('franchise.devis.')->group(function () {
     Route::post('/', [DevisController::class, 'store'])->name('store');
     Route::get('/{devis}', [DevisController::class, 'show'])->name('show');
     Route::post('/{devis}/reponses', [DevisController::class, 'saveReponse'])->name('reponses.store');
+    Route::post('/{devis}/tarification', [DevisController::class, 'updateTarification'])->name('tarification.update');
+    Route::delete('/{devis}/reponses', [DevisController::class, 'clearReponses'])->name('reponses.clear');
+
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
