@@ -2,9 +2,11 @@ import { router } from '@inertiajs/react';
 import { Info } from 'lucide-react';
 import { useState } from 'react';
 import { SectionTitle } from '@/components/section-title';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { AjouterMainOeuvreDialog } from './AjouterMainOeuvreDialog';
 
 interface QuestionOption {
     id: number;
@@ -36,17 +38,27 @@ interface DevisReponse {
     question_option_id: number;
 }
 
+interface MainOeuvre {
+    id: number;
+    libelle: string;
+    nombre_heures_chantier: number;
+    nombre_heures_mini_pelle: number;
+    cout: number;
+}
+
 interface Props {
     devisId: number;
     scenario: Scenario | null;
     reponses: DevisReponse[];
     visibleQuestionIds: number[];
+    mainOeuvres: MainOeuvre[];
 }
 
-export default function ChiffrageTab({ devisId, scenario, reponses, visibleQuestionIds }: Props) {
+export default function ChiffrageTab({ devisId, scenario, reponses, visibleQuestionIds, mainOeuvres }: Props) {
     const [answers, setAnswers] = useState<Record<number, string>>(
         Object.fromEntries(reponses.map((r) => [r.question_id, String(r.question_option_id)])),
     );
+    const [mainOeuvreDialogOpen, setMainOeuvreDialogOpen] = useState(false);
 
     function setAnswer(questionId: number, optionId: string) {
         setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
@@ -139,7 +151,34 @@ export default function ChiffrageTab({ devisId, scenario, reponses, visibleQuest
                         ))}
                     </section>
                 ))}
+
+                {mainOeuvres.length > 0 && (
+                    <section className="flex flex-col gap-3 rounded-md border p-4">
+                        <SectionTitle>Main d'œuvre</SectionTitle>
+                        <ul className="flex flex-col gap-2">
+                            {mainOeuvres.map((mo) => (
+                                <li key={mo.id} className="grid grid-cols-[1fr_auto_auto] items-start gap-x-4 text-sm">
+                                    <span className="text-muted-foreground">{mo.libelle}</span>
+                                    <span className="text-foreground">{mo.nombre_heures_chantier}h chantier</span>
+                                    <span className="text-foreground">{mo.nombre_heures_mini_pelle}h mini-pelle</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                )}
+
+                <div className="flex justify-center">
+                    <Button type="button" onClick={() => setMainOeuvreDialogOpen(true)}>
+                        + Ajouter main d'œuvre
+                    </Button>
+                </div>
             </div>
+
+            <AjouterMainOeuvreDialog
+                devisId={devisId}
+                open={mainOeuvreDialogOpen}
+                onClose={() => setMainOeuvreDialogOpen(false)}
+            />
         </div>
     );
 }

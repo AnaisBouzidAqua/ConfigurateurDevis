@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Info, List } from 'lucide-react';
+import { Info, List, X } from 'lucide-react';
 import { useState } from 'react';
 import { SectionTitle, SubSectionTitle } from '@/components/section-title';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,14 @@ interface Ligne {
     prix: number | null;
 }
 
+interface MainOeuvre {
+    id: number;
+    libelle: string;
+    nombre_heures_chantier: number;
+    nombre_heures_mini_pelle: number;
+    cout: number;
+}
+
 interface Totaux {
     total_ht: number;
     total_tva: number;
@@ -23,6 +31,7 @@ interface Totaux {
 interface Props {
     devisId: number;
     lignes: Ligne[];
+    mainOeuvres: MainOeuvre[];
     totaux: Totaux;
     coefficientDifficulte: number;
     remiseValeur: number | null;
@@ -32,6 +41,7 @@ interface Props {
 export default function Recapitulatif({
     devisId,
     lignes,
+    mainOeuvres,
     totaux,
     coefficientDifficulte,
     remiseValeur,
@@ -63,7 +73,7 @@ export default function Recapitulatif({
                 <div className="flex size-8 items-center justify-center rounded-full bg-primary/10">
                     <List className="text-primary size-4" />
                 </div>
-                <SectionTitle>Récapitulatif</SectionTitle>
+                <SectionTitle className="text-label">Récapitulatif</SectionTitle>
             </div>
             <div className="-mx-4 border-b" />
 
@@ -76,11 +86,29 @@ export default function Recapitulatif({
                             key={ligne.produit_ref}
                             className="grid grid-cols-[auto_1fr_auto] items-start gap-x-2 text-sm"
                         >
-                            <span className="text-[#64748B]">×{ligne.quantite}</span>
-                            <span className="text-[#64748B]">{ligne.nom}</span>
-                            <span className="text-[#212529]">
+                            <span className="text-muted-foreground">×{ligne.quantite}</span>
+                            <span className="text-muted-foreground">{ligne.nom}</span>
+                            <span className="text-foreground">
                                 {ligne.prix !== null ? `${(ligne.quantite * ligne.prix).toFixed(2)} €` : '—'}
                             </span>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            {mainOeuvres.length > 0 && (
+                <ul className="mb-4 flex flex-col gap-2">
+                    {mainOeuvres.map((mo) => (
+                        <li key={mo.id} className="grid grid-cols-[1fr_auto_auto] items-start gap-x-2 text-sm">
+                            <span className="text-muted-foreground">{mo.libelle}</span>
+                            <span className="text-foreground">{mo.cout.toFixed(2)} €</span>
+                            <button
+                                type="button"
+                                onClick={() => router.delete(`/devis/${devisId}/main-oeuvre/${mo.id}`)}
+                                className="text-destructive hover:text-destructive/80"
+                            >
+                                <X className="size-4" />
+                            </button>
                         </li>
                     ))}
                 </ul>
@@ -93,12 +121,12 @@ export default function Recapitulatif({
             <div className="flex flex-col gap-3 border-t pt-3">
                 <div className="grid gap-1.5">
                     <div className="flex items-center gap-1.5">
-                        <Label htmlFor="coefficient_difficulte" className="text-[#64748B]">
+                        <Label htmlFor="coefficient_difficulte" className="text-muted-foreground">
                             Coefficient de difficulté
                         </Label>
                         <Tooltip>
                             <TooltipTrigger type="button">
-                                <Info className="text-[#64748B] size-3.5" />
+                                <Info className="text-muted-foreground size-3.5" />
                             </TooltipTrigger>
                             <TooltipContent>Applique une hausse tarifaire au total</TooltipContent>
                         </Tooltip>
@@ -116,7 +144,7 @@ export default function Recapitulatif({
 
                 <div className="grid gap-1.5">
                     <div className="flex items-center justify-between">
-                        <Label htmlFor="remise_valeur" className="text-[#64748B]">
+                        <Label htmlFor="remise_valeur" className="text-muted-foreground">
                             Remise commercial
                         </Label>
                         <RadioGroup
@@ -156,16 +184,16 @@ export default function Recapitulatif({
 
             <div className="mt-4 flex flex-col gap-1 border-t pt-3 text-sm">
                 <div className="flex justify-between">
-                    <span className="text-[#64748B]">Total HT</span>
-                    <span className="text-[#212529]">{totaux.total_ht.toFixed(2)} €</span>
+                    <span className="text-muted-foreground">Total HT</span>
+                    <span className="text-foreground">{totaux.total_ht.toFixed(2)} €</span>
                 </div>
                 <div className="flex justify-between">
-                    <span className="text-[#64748B]">Total TVA</span>
-                    <span className="text-[#212529]">{totaux.total_tva.toFixed(2)} €</span>
+                    <span className="text-muted-foreground">Total TVA</span>
+                    <span className="text-foreground">{totaux.total_tva.toFixed(2)} €</span>
                 </div>
                 <div className="flex justify-between font-semibold">
-                    <span className="text-[#212529]">Total TTC</span>
-                    <span className="text-[#212529]">{totaux.total_ttc.toFixed(2)} €</span>
+                    <span className="text-foreground">Total TTC</span>
+                    <span className="text-foreground">{totaux.total_ttc.toFixed(2)} €</span>
                 </div>
             </div>
         </aside>

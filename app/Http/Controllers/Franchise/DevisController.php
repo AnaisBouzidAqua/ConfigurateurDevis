@@ -7,6 +7,8 @@ use App\Models\Scenario;
 use App\Models\Devis;
 use App\Models\DevisReponse;
 use App\Models\Produit;
+use App\Models\DevisMainOeuvre;
+use App\Models\Parametre;
 use App\Services\MoteurScenarios;
 use Illuminate\Http\Request;
 
@@ -77,6 +79,33 @@ class DevisController extends Controller
     }
 
     /**
+     * Ajoute une ligne de main d'œuvre au devis.
+     */
+    public function storeMainOeuvre(Request $request, Devis $devis)
+    {
+        $validated = $request->validate([
+            'libelle' => 'required|string|max:255',
+            'nombre_heures_chantier' => 'required|numeric|min:0',
+            'nombre_heures_mini_pelle' => 'required|numeric|min:0',
+        ]);
+
+        $devis->mainOeuvres()->create($validated);
+
+        return redirect(route('franchise.devis.show', $devis) . '?tab=chiffrage');
+    }
+
+    /**
+     * Supprime une ligne de main d'œuvre du devis.
+     */
+    public function destroyMainOeuvre(Devis $devis, DevisMainOeuvre $mainOeuvre)
+    {
+        $mainOeuvre->delete();
+
+        return redirect(route('franchise.devis.show', $devis) . '?tab=chiffrage');
+    }
+
+
+    /**
      * Enregistre le coefficient de difficulté et la remise commerciale
      * saisis manuellement pour ce devis.
      */
@@ -130,7 +159,19 @@ class DevisController extends Controller
             })->values();
         }
 
-        $totalBase = $resolution->sum(fn (array $ligne) => $ligne['quantite'] * ($ligne['prix'] ?? 0));
+        $parametre = Parametre::current();
+
+        $mainOeuvres = $devis->mainOeuvres->map(fn (DevisMainOeuvre $mo) => [
+            'id' => $mo->id,
+            'libelle' => $mo->libelle,
+            'nombre_heures_chantier' => $mo->nombre_heures_chantier,
+            'nombre_heures_mini_pelle' => $mo->nombre_heures_mini_pelle,
+            'cout' => $mo->nombre_heures_chantier * $parametre->taux_horaire_chantier
+                + $mo->nombre_heures_mini_pelle * $parametre->taux_horaire_mini_pelle,
+        ]);
+
+        $totalProduits = $resolution->sum(fn (array $ligne) => $ligne['quantite'] * ($ligne['prix'] ?? 0));
+        $totalBase = $totalProduits + $mainOeuvres->sum('cout');
         $totalApresCoefficient = $totalBase * (1 + $devis->coefficient_difficulte);
 
         $remiseMontant = match ($devis->remise_type) {
@@ -145,6 +186,7 @@ class DevisController extends Controller
             'devis' => $devis,
             'resolution' => $resolution,
             'visibleQuestionIds' => $visibleQuestionIds,
+            'mainOeuvres' => $mainOeuvres,
             'totaux' => [
                 'total_ht' => round($totalHt, 2),
                 'total_tva' => $totalTva,

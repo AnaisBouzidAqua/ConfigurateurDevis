@@ -62,6 +62,15 @@ interface Ligne {
     prix: number | null;
 }
 
+interface MainOeuvre {
+    id: number;
+    libelle: string;
+    nombre_heures_chantier: number;
+    nombre_heures_mini_pelle: number;
+    cout: number;
+}
+
+
 interface Totaux {
     total_ht: number;
     total_tva: number;
@@ -72,6 +81,7 @@ interface Props {
     devis: Devis;
     resolution: Ligne[];
     visibleQuestionIds: number[];
+    mainOeuvres: MainOeuvre[];
     totaux: Totaux;
 }
 
@@ -90,7 +100,7 @@ function toDossierData(devis: Devis) {
     };
 }
 
-export default function Show({ devis, resolution, visibleQuestionIds, totaux }: Props) {
+export default function Show({ devis, resolution, visibleQuestionIds, mainOeuvres, totaux }: Props) {
     const initialTab = new URLSearchParams(window.location.search).get('tab') === 'chiffrage' ? 'chiffrage' : 'dossier';
     const [tab, setTab] = useState<'dossier' | 'chiffrage'>(initialTab);
     const [dossierData, setDossierData] = useState(toDossierData(devis));
@@ -141,12 +151,14 @@ export default function Show({ devis, resolution, visibleQuestionIds, totaux }: 
                                     scenario={devis.scenario}
                                     reponses={devis.reponses}
                                     visibleQuestionIds={visibleQuestionIds}
+                                    mainOeuvres={mainOeuvres}
                                 />
                             </div>
                             <div className="flex w-80 shrink-0 flex-col gap-3">
                                 <Recapitulatif
                                     devisId={devis.id}
                                     lignes={resolution}
+                                    mainOeuvres={mainOeuvres}
                                     totaux={totaux}
                                     coefficientDifficulte={devis.coefficient_difficulte}
                                     remiseValeur={devis.remise_valeur}
