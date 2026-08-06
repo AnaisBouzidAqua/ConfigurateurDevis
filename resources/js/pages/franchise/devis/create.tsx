@@ -63,7 +63,7 @@ export default function Create({ scenarios }: Props) {
                             errors={errors}
                             dispositifExtra={
                                 <div className="grid gap-1.5">
-                                    <label htmlFor="scenario_id" className="text-sm font-medium text-[#334155]">
+                                    <label htmlFor="scenario_id" className="text-label text-sm font-medium">
                                         Scénario (temporaire, en attendant AquaConnect)
                                     </label>
                                     <select

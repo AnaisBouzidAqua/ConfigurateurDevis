@@ -41,6 +41,8 @@
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
 
+    --color-label: var(--label);
+
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
@@ -63,7 +65,7 @@
 
 :root {
     --background: #ffffff;
-    --foreground: oklch(0.145 0 0);
+    --foreground: #212529;
     --card: #f8fafc;
     --card-foreground: #212529;
     --popover: oklch(1 0 0);
@@ -73,11 +75,12 @@
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
+    --muted-foreground: #64748B;
     --accent: oklch(0.97 0 0);
     --accent-foreground: oklch(0.205 0 0);
     --destructive: #F43F5E;
     --destructive-foreground: oklch(0.577 0.245 27.325);
+    --label: #334155;
     --border: #e2e8f0;
     --input: oklch(0.922 0 0);
     --ring: #117176;

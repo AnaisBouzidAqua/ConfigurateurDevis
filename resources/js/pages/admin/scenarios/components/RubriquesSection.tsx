@@ -170,7 +170,7 @@ export default function RubriquesSection({ rubriques, questions, produits }: Pro
                                                     key={question.id}
                                                     className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
                                                 >
-                                                    <span className="text-[#64748B]">{question.texte}</span>
+                                                    <span className="text-muted-foreground">{question.texte}</span>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground">
                                                             <MoreVertical className="size-4" />
