@@ -1,5 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import DossierFields from './components/DossierFields';
+import { Button } from '@/components/ui/button';
+
 
 interface Scenario {
     id: number;
@@ -45,14 +47,13 @@ export default function Create({ scenarios }: Props) {
                             <span className="cursor-not-allowed pb-2 text-sm text-muted-foreground">Chiffrage</span>
                         </div>
 
-                        <button
+                        <Button
                             type="submit"
                             form="devis-create-form"
                             disabled={processing}
-                            className="rounded-full bg-primary px-5 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
                         >
                             Suivant
-                        </button>
+                        </Button>
                     </div>
 
                     <form id="devis-create-form" onSubmit={handleSubmit}>
