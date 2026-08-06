@@ -23,17 +23,17 @@ const adminNavItems: NavItem[] = [
     },
 ];
 
-// "Historique des chiffrages" et "Paramètres" pointent vers /devis/create
-// en attendant que ces écrans existent — à corriger une fois construits.
+// "Historique des chiffrages" pointe vers /devis/create
+// en attendant que cet écran existe — à corriger une fois construits.
 const franchiseNavItems: NavItem[] = [
     { title: 'Configurateur', href: '/devis/create', icon: Euro },
     { title: 'Historique des chiffrages', href: '/devis/create', icon: Folder},
-    { title: 'Paramètres', href: '/devis/create', icon: Settings },
+    { title: 'Paramètres', href: '/parametres', icon: Settings },
 ];
 
 export function AppSidebar() {
     const { url } = usePage();
-    const isFranchise = url.startsWith('/devis');
+    const isFranchise = url.startsWith('/devis') || url.startsWith('/parametres');
     const mainNavItems = isFranchise ? franchiseNavItems : adminNavItems;
     const homeHref = isFranchise ? '/devis/create' : '/admin/scenarios';
 
