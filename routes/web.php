@@ -26,6 +26,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::prefix('devis')->name('franchise.devis.')->group(function () {
     Route::get('/create', [DevisController::class, 'create'])->name('create');
+    Route::get('/', [DevisController::class, 'index'])->name('index');
     Route::post('/', [DevisController::class, 'store'])->name('store');
     Route::get('/{devis}', [DevisController::class, 'show'])->name('show');
     Route::post('/{devis}/reponses', [DevisController::class, 'saveReponse'])->name('reponses.store');
@@ -33,6 +34,7 @@ Route::prefix('devis')->name('franchise.devis.')->group(function () {
     Route::delete('/{devis}/reponses', [DevisController::class, 'clearReponses'])->name('reponses.clear');
     Route::post('/{devis}/main-oeuvre', [DevisController::class, 'storeMainOeuvre'])->name('main_oeuvre.store');
     Route::delete('/{devis}/main-oeuvre/{mainOeuvre}', [DevisController::class, 'destroyMainOeuvre'])->name('main_oeuvre.destroy');
+    Route::put('/{devis}/archiver', [DevisController::class, 'archiver'])->name('archiver');
 });
 
 Route::name('franchise.')->group(function () {

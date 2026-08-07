@@ -14,6 +14,55 @@ use Illuminate\Http\Request;
 
 class DevisController extends Controller
 {
+
+    /**
+     * Liste des devis non archivés, avec recherche par nom de client.
+     */
+    public function index(Request $request)
+    {
+        $recherche = $request->query('recherche');
+        $parPage = (int) $request->query('par_page', 20);
+        $tri = $request->query('tri', 'created_at');
+        $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
+        $dateDebut = $request->query('date_debut');
+        $dateFin = $request->query('date_fin');
+
+        $colonnesTriables = ['client_nom', 'dispositif', 'type_realisation', 'created_at'];
+        if (! in_array($tri, $colonnesTriables, true)) {
+            $tri = 'created_at';
+        }
+
+        $devis = Devis::whereNull('archived_at')
+            ->when($recherche, fn($query) => $query->where('client_nom', 'ilike', "%{$recherche}%"))
+            ->when($dateDebut, fn($query) => $query->whereDate('created_at', '>=', $dateDebut))
+            ->when($dateFin, fn($query) => $query->whereDate('created_at', '<=', $dateFin))
+            ->orderBy($tri, $direction)
+            ->paginate($parPage)
+            ->withQueryString();
+
+        return inertia('franchise/devis/index', [
+            'devis' => $devis,
+            'recherche' => $recherche,
+            'parPage' => $parPage,
+            'tri' => $tri,
+            'direction' => $direction,
+            'dateDebut' => $dateDebut,
+            'dateFin' => $dateFin,
+        ]);
+    }
+
+
+
+    /**
+     * Archive un devis (il disparaît de l'Historique sans être supprimé).
+     */
+    public function archiver(Devis $devis)
+    {
+        $devis->update(['archived_at' => now()]);
+
+        return redirect()->route('franchise.devis.index');
+    }
+
     /**
      * Formulaire "Dossier" vierge, avant qu'un Devis existe.
      */
@@ -161,7 +210,7 @@ class DevisController extends Controller
 
         $parametre = Parametre::current();
 
-        $mainOeuvres = $devis->mainOeuvres->map(fn (DevisMainOeuvre $mo) => [
+        $mainOeuvres = $devis->mainOeuvres->map(fn(DevisMainOeuvre $mo) => [
             'id' => $mo->id,
             'libelle' => $mo->libelle,
             'nombre_heures_chantier' => $mo->nombre_heures_chantier,
@@ -170,7 +219,7 @@ class DevisController extends Controller
                 + $mo->nombre_heures_mini_pelle * $parametre->taux_horaire_mini_pelle,
         ]);
 
-        $totalProduits = $resolution->sum(fn (array $ligne) => $ligne['quantite'] * ($ligne['prix'] ?? 0));
+        $totalProduits = $resolution->sum(fn(array $ligne) => $ligne['quantite'] * ($ligne['prix'] ?? 0));
         $totalBase = $totalProduits + $mainOeuvres->sum('cout');
         $totalApresCoefficient = $totalBase * (1 + $devis->coefficient_difficulte);
 
@@ -193,6 +242,5 @@ class DevisController extends Controller
                 'total_ttc' => round($totalHt + $totalTva, 2),
             ],
         ]);
-
     }
 }

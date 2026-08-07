@@ -23,11 +23,9 @@ const adminNavItems: NavItem[] = [
     },
 ];
 
-// "Historique des chiffrages" pointe vers /devis/create
-// en attendant que cet écran existe — à corriger une fois construits.
 const franchiseNavItems: NavItem[] = [
     { title: 'Configurateur', href: '/devis/create', icon: Euro },
-    { title: 'Historique des chiffrages', href: '/devis/create', icon: Folder},
+    { title: 'Historique des chiffrages', href: '/devis', icon: Folder},
     { title: 'Paramètres', href: '/parametres', icon: Settings },
 ];
 
