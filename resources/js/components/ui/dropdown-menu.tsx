@@ -29,6 +29,22 @@ function DropdownMenuTrigger({
   )
 }
 
+function DropdownMenuIconTrigger({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuTrigger>) {
+  return (
+    <DropdownMenuTrigger
+      className={cn(
+        "text-muted-foreground hover:text-foreground data-[state=open]:border-primary data-[state=open]:text-primary flex size-7 items-center justify-center rounded-md data-[state=open]:border-2 data-[state=open]:[&_svg]:stroke-[2.5]",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+
 function DropdownMenuContent({
   className,
   sideOffset = 4,
@@ -240,6 +256,7 @@ export {
   DropdownMenu,
   DropdownMenuPortal,
   DropdownMenuTrigger,
+  DropdownMenuIconTrigger,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuLabel,

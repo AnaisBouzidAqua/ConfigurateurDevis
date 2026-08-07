@@ -42,8 +42,10 @@
     --color-destructive-foreground: var(--destructive-foreground);
 
     --color-label: var(--label);
+    --color-disabled: var(--disabled);
 
     --color-border: var(--border);
+    --color-border-secondary: var(--border-secondary);
     --color-input: var(--input);
     --color-ring: var(--ring);
 
@@ -81,7 +83,9 @@
     --destructive: #F43F5E;
     --destructive-foreground: oklch(0.577 0.245 27.325);
     --label: #334155;
+    --disabled: #A4A7AE;
     --border: #e2e8f0;
+    --border-secondary: #CBD5E1;
     --input: oklch(0.922 0 0);
     --ring: #117176;
     --chart-1: oklch(0.646 0.222 41.116);

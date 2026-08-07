@@ -2,6 +2,7 @@ import { router, useForm } from '@inertiajs/react';
 import { ChevronDown, Copy, GripVertical, MoreVertical, Pencil, Trash2, Layers } from 'lucide-react';
 import { useState } from 'react';
 import { DialogIcon } from '@/components/dialog-icon';
+import { EmptyState } from '@/components/empty-state';
 import { RequiredMark } from '@/components/required-mark';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -9,9 +10,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuIconTrigger,
     DropdownMenuItem,
     DropdownMenuSeparator,
-    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -124,11 +125,11 @@ export default function RubriquesSection({ rubriques, questions, produits }: Pro
     return (
         <section>
             {rubriques.length === 0 ? (
-                <div className="mx-auto flex max-w-4xl flex-col items-center justify-center gap-2 rounded-md border border-dashed py-16 text-center">
-                    <Layers className="text-muted-foreground/50 size-8" />
-                    <p className="text-muted-foreground text-sm">Aucune section pour l'instant.</p>
-                    <p className="text-muted-foreground text-xs">Clique sur « + Ajouter une section » pour commencer.</p>
-                </div>
+                <EmptyState
+                    icon={Layers}
+                    title="Aucune section pour l'instant."
+                    description="Clique sur « + Ajouter une section » pour commencer."
+                />
             ) : (
                 <ul className="mx-auto flex max-w-4xl flex-col gap-2">
                     {rubriques.map((rubrique) => (
@@ -142,9 +143,9 @@ export default function RubriquesSection({ rubriques, questions, produits }: Pro
                                     </CollapsibleTrigger>
 
                                     <DropdownMenu>
-                                        <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground">
+                                        <DropdownMenuIconTrigger>
                                             <MoreVertical className="size-4" />
-                                        </DropdownMenuTrigger>
+                                        </DropdownMenuIconTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuItem onClick={() => openRename(rubrique)}>
                                                 <Pencil /> Renommer
@@ -172,9 +173,9 @@ export default function RubriquesSection({ rubriques, questions, produits }: Pro
                                                 >
                                                     <span className="text-muted-foreground">{question.texte}</span>
                                                     <DropdownMenu>
-                                                        <DropdownMenuTrigger className="text-muted-foreground hover:text-foreground">
+                                                        <DropdownMenuIconTrigger>
                                                             <MoreVertical className="size-4" />
-                                                        </DropdownMenuTrigger>
+                                                        </DropdownMenuIconTrigger>
                                                         <DropdownMenuContent align="end">
                                                             <DropdownMenuItem
                                                                 onClick={() => setEditQuestionTarget(question)}

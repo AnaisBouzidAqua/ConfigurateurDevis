@@ -1,5 +1,6 @@
 import { Head, Link} from '@inertiajs/react';
-import { Eye } from 'lucide-react';
+import { ClipboardList, Eye } from 'lucide-react';
+import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -22,7 +23,7 @@ export default function Index({ scenarios }: Props) {
             <div className="flex flex-col gap-6 p-4">
 
                 {scenarios.length === 0 ? (
-                    <p className="text-muted-foreground">Aucun scénario pour l'instant.</p>
+                    <EmptyState icon={ClipboardList} title="Aucun scénario pour l'instant." />
                 ) : (
                     <div className="mx-auto grid w-fit grid-cols-1 gap-4 sm:grid-cols-2">
 
