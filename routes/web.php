@@ -28,6 +28,7 @@ Route::prefix('devis')->name('franchise.devis.')->group(function () {
     Route::get('/create', [DevisController::class, 'create'])->name('create');
     Route::get('/', [DevisController::class, 'index'])->name('index');
     Route::post('/', [DevisController::class, 'store'])->name('store');
+    Route::get('/export', [DevisController::class, 'export'])->name('export');
     Route::get('/{devis}', [DevisController::class, 'show'])->name('show');
     Route::post('/{devis}/reponses', [DevisController::class, 'saveReponse'])->name('reponses.store');
     Route::post('/{devis}/tarification', [DevisController::class, 'updateTarification'])->name('tarification.update');

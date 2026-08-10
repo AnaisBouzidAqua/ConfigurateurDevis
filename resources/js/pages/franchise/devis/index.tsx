@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { Archive, ArrowDown, ArrowUp, FileText, MoreVertical, Search } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, FileSpreadsheet, FileText, MoreVertical, Search } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import {
     DropdownMenu,
@@ -96,7 +96,8 @@ export default function Index({ devis, recherche, parPage, tri, direction, dateD
 
 
                 <div className="overflow-hidden rounded-xl border-1 border-border-secondary ">
-                    <table className="w-full text-sm">
+                    <table className="w-full table-fixed text-sm">
+
                         <thead>
                             <tr className="bg-card text-muted-foreground border-b border-border-secondary text-left">
                                 {colonnes.map((colonne) => (
@@ -111,7 +112,25 @@ export default function Index({ devis, recherche, parPage, tri, direction, dateD
                                         </button>
                                     </th>
                                 ))}
-                                <th className="w-10"></th>
+
+                                <th className="w-10 px-2 py-3 text-right">
+                                    <a
+                                        href={`/devis/export?${new URLSearchParams({
+                                            recherche: recherche ?? '',
+                                            tri,
+                                            direction,
+                                            date_debut: dateDebut ?? '',
+                                            date_fin: dateFin ?? '',
+                                        }).toString()}`}
+                                        className="inline-flex"
+                                        title="Exporter en Excel"
+                                    >
+                                        <img src="/images/excel-icon.svg" alt="Exporter en Excel" className="size-5" />
+                                    </a>
+                                </th>
+
+
+
 
                             </tr>
                         </thead>

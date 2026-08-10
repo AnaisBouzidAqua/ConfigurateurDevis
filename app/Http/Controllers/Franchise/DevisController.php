@@ -9,6 +9,8 @@ use App\Models\DevisReponse;
 use App\Models\Produit;
 use App\Models\DevisMainOeuvre;
 use App\Models\Parametre;
+use App\Exports\DevisExport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Services\MoteurScenarios;
 use Illuminate\Http\Request;
 
@@ -20,35 +22,60 @@ class DevisController extends Controller
      */
     public function index(Request $request)
     {
-        $recherche = $request->query('recherche');
         $parPage = (int) $request->query('par_page', 20);
-        $tri = $request->query('tri', 'created_at');
-        $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
-        $dateDebut = $request->query('date_debut');
-        $dateFin = $request->query('date_fin');
+        [$tri, $direction] = $this->triValide($request);
 
-        $colonnesTriables = ['client_nom', 'dispositif', 'type_realisation', 'created_at'];
-        if (! in_array($tri, $colonnesTriables, true)) {
-            $tri = 'created_at';
-        }
-
-        $devis = Devis::whereNull('archived_at')
-            ->when($recherche, fn($query) => $query->where('client_nom', 'ilike', "%{$recherche}%"))
-            ->when($dateDebut, fn($query) => $query->whereDate('created_at', '>=', $dateDebut))
-            ->when($dateFin, fn($query) => $query->whereDate('created_at', '<=', $dateFin))
-            ->orderBy($tri, $direction)
+        $devis = $this->devisFiltres($request)
             ->paginate($parPage)
             ->withQueryString();
 
         return inertia('franchise/devis/index', [
             'devis' => $devis,
-            'recherche' => $recherche,
+            'recherche' => $request->query('recherche'),
             'parPage' => $parPage,
             'tri' => $tri,
             'direction' => $direction,
-            'dateDebut' => $dateDebut,
-            'dateFin' => $dateFin,
+            'dateDebut' => $request->query('date_debut'),
+            'dateFin' => $request->query('date_fin'),
         ]);
+    }
+
+    /**
+     * Télécharge l'historique filtré au format Excel.
+     */
+    public function export(Request $request)
+    {
+        return Excel::download(
+            new DevisExport($this->devisFiltres($request)),
+            'historique-chiffrages.xlsx',
+        );
+    }
+
+    private function triValide(Request $request): array
+    {
+        $colonnesTriables = ['client_nom', 'dispositif', 'type_realisation', 'created_at'];
+        $tri = $request->query('tri', 'created_at');
+        $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
+
+        if (! in_array($tri, $colonnesTriables, true)) {
+            $tri = 'created_at';
+        }
+
+        return [$tri, $direction];
+    }
+
+    private function devisFiltres(Request $request): \Illuminate\Database\Eloquent\Builder
+    {
+        $recherche = $request->query('recherche');
+        $dateDebut = $request->query('date_debut');
+        $dateFin = $request->query('date_fin');
+        [$tri, $direction] = $this->triValide($request);
+
+        return Devis::whereNull('archived_at')
+            ->when($recherche, fn($query) => $query->where('client_nom', 'ilike', "%{$recherche}%"))
+            ->when($dateDebut, fn($query) => $query->whereDate('created_at', '>=', $dateDebut))
+            ->when($dateFin, fn($query) => $query->whereDate('created_at', '<=', $dateFin))
+            ->orderBy($tri, $direction);
     }
 
 
