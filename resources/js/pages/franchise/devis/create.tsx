@@ -1,7 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
-import DossierFields from './components/DossierFields';
 import { Button } from '@/components/ui/button';
-
+import DossierFields from './components/DossierFields';
 
 interface Scenario {
     id: number;
@@ -66,21 +65,26 @@ export default function Create({ scenarios }: Props) {
                                     <label htmlFor="scenario_id" className="text-label text-sm font-medium">
                                         Scénario (temporaire, en attendant AquaConnect)
                                     </label>
-                                    <select
-                                        id="scenario_id"
-                                        value={data.scenario_id}
-                                        onChange={(e) => setData('scenario_id', e.target.value)}
-                                        className="rounded-md border px-3 py-1.5 text-sm"
-                                    >
-                                        <option value="">Aucun</option>
-                                        {scenarios.map((scenario) => (
-                                            <option key={scenario.id} value={scenario.id}>
-                                                {scenario.famille} — {scenario.nom}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    {scenarios.length === 0 ? (
+                                        <p className="text-muted-foreground text-sm">Aucun chiffrage paramétré.</p>
+                                    ) : (
+                                        <select
+                                            id="scenario_id"
+                                            value={data.scenario_id}
+                                            onChange={(e) => setData('scenario_id', e.target.value)}
+                                            className="rounded-md border px-3 py-1.5 text-sm"
+                                        >
+                                            <option value="">Aucun</option>
+                                            {scenarios.map((scenario) => (
+                                                <option key={scenario.id} value={scenario.id}>
+                                                    {scenario.famille} — {scenario.nom}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </div>
                             }
+
                         />
                     </form>
                 </div>

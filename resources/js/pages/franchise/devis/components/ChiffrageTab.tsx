@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Info } from 'lucide-react';
+import { Info, Layers } from 'lucide-react';
 import { useState } from 'react';
 import { SectionTitle } from '@/components/section-title';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AjouterMainOeuvreDialog } from './AjouterMainOeuvreDialog';
+import { EmptyState } from '@/components/empty-state';
+
 
 interface QuestionOption {
     id: number;
@@ -78,107 +80,108 @@ export default function ChiffrageTab({ devisId, scenario, reponses, visibleQuest
         .filter((rubrique) => rubrique.questions.length > 0);
 
     if (!scenario) {
-        return (
-            <p className="text-muted-foreground text-sm">
-                Aucun scénario n'est associé à ce devis pour l'instant.
-            </p>
-        );
+        return <EmptyState icon={Layers} title="Aucun scénario n'est associé à ce devis pour l'instant." />;
+    }
+
+    if (visibleRubriques.length === 0) {
+        return <EmptyState icon={Layers} title="Ce scénario ne contient aucune rubrique paramétrée pour l'instant." />;
     }
 
     return (
-        <div className="grid grid-cols-[200px_1fr] gap-6">
-            <nav className="flex flex-col gap-1">
-                {visibleRubriques.map((rubrique) => (
-                    <a
-                        key={rubrique.id}
-                        href={`#rubrique-${rubrique.id}`}
-                        className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-2 py-1.5 text-sm"
-                    >
-                        {rubrique.titre}
-                    </a>
-                ))}
-            </nav>
+    <div className="grid grid-cols-[200px_1fr] gap-6">
+        <nav className="flex flex-col gap-1">
+            {visibleRubriques.map((rubrique) => (
+                <a
+                    key={rubrique.id}
+                    href={`#rubrique-${rubrique.id}`}
+                    className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-2 py-1.5 text-sm"
+                >
+                    {rubrique.titre}
+                </a>
+            ))}
+        </nav>
 
-            <div className="flex flex-col gap-4">
-                {visibleRubriques.map((rubrique) => (
-                    <section
-                        key={rubrique.id}
-                        id={`rubrique-${rubrique.id}`}
-                        className="flex flex-col gap-4 rounded-md border p-4"
-                    >
-                        <div className="flex items-center gap-1.5">
-                            <SectionTitle>{rubrique.titre}</SectionTitle>
-                            {rubrique.bulle_infos && (
-                                <Tooltip>
-                                    <TooltipTrigger type="button">
-                                        <Info className="text-muted-foreground size-3.5" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>{rubrique.bulle_infos}</TooltipContent>
-                                </Tooltip>
-                            )}
-                        </div>
+        <div className="flex flex-col gap-4">
+            {visibleRubriques.map((rubrique) => (
+                <section
+                    key={rubrique.id}
+                    id={`rubrique-${rubrique.id}`}
+                    className="flex flex-col gap-4 rounded-md border p-4"
+                >
+                    <div className="flex items-center gap-1.5">
+                        <SectionTitle>{rubrique.titre}</SectionTitle>
+                        {rubrique.bulle_infos && (
+                            <Tooltip>
+                                <TooltipTrigger type="button">
+                                    <Info className="text-muted-foreground size-3.5" />
+                                </TooltipTrigger>
+                                <TooltipContent>{rubrique.bulle_infos}</TooltipContent>
+                            </Tooltip>
+                        )}
+                    </div>
 
-                        {rubrique.questions.map((question) => (
-                            <div key={question.id} className="grid gap-1.5">
-                                <div className="flex items-center gap-1.5">
-                                    <Label>{question.texte}</Label>
-                                    {question.infos_bulle && (
-                                        <Tooltip>
-                                            <TooltipTrigger type="button">
-                                                <Info className="text-muted-foreground size-3.5" />
-                                            </TooltipTrigger>
-                                            <TooltipContent>{question.infos_bulle}</TooltipContent>
-                                        </Tooltip>
-                                    )}
-                                </div>
-
-                                <RadioGroup
-                                    value={answers[question.id] ?? ''}
-                                    onValueChange={(value) => setAnswer(question.id, value)}
-                                    className="flex flex-wrap gap-4"
-                                >
-                                    {question.options.map((option) => (
-                                        <div key={option.id} className="flex items-center gap-2">
-                                            <RadioGroupItem
-                                                value={String(option.id)}
-                                                id={`q${question.id}_o${option.id}`}
-                                            />
-                                            <Label htmlFor={`q${question.id}_o${option.id}`}>{option.libelle}</Label>
-                                        </div>
-                                    ))}
-                                </RadioGroup>
+                    {rubrique.questions.map((question) => (
+                        <div key={question.id} className="grid gap-1.5">
+                            <div className="flex items-center gap-1.5">
+                                <Label>{question.texte}</Label>
+                                {question.infos_bulle && (
+                                    <Tooltip>
+                                        <TooltipTrigger type="button">
+                                            <Info className="text-muted-foreground size-3.5" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>{question.infos_bulle}</TooltipContent>
+                                    </Tooltip>
+                                )}
                             </div>
+
+                            <RadioGroup
+                                value={answers[question.id] ?? ''}
+                                onValueChange={(value) => setAnswer(question.id, value)}
+                                className="flex flex-wrap gap-4"
+                            >
+                                {question.options.map((option) => (
+                                    <div key={option.id} className="flex items-center gap-2">
+                                        <RadioGroupItem
+                                            value={String(option.id)}
+                                            id={`q${question.id}_o${option.id}`}
+                                        />
+                                        <Label htmlFor={`q${question.id}_o${option.id}`}>{option.libelle}</Label>
+                                    </div>
+                                ))}
+                            </RadioGroup>
+                        </div>
+                    ))}
+                </section>
+            ))}
+
+            {mainOeuvres.length > 0 && (
+                <section className="flex flex-col gap-3 rounded-md border p-4">
+                    <SectionTitle>Main d'œuvre</SectionTitle>
+                    <ul className="flex flex-col gap-2">
+                        {mainOeuvres.map((mo) => (
+                            <li key={mo.id} className="grid grid-cols-[1fr_auto_auto] items-start gap-x-4 text-sm">
+                                <span className="text-muted-foreground">{mo.libelle}</span>
+                                <span className="text-foreground">{mo.nombre_heures_chantier}h chantier</span>
+                                <span className="text-foreground">{mo.nombre_heures_mini_pelle}h mini-pelle</span>
+                            </li>
                         ))}
-                    </section>
-                ))}
+                    </ul>
+                </section>
+            )}
 
-                {mainOeuvres.length > 0 && (
-                    <section className="flex flex-col gap-3 rounded-md border p-4">
-                        <SectionTitle>Main d'œuvre</SectionTitle>
-                        <ul className="flex flex-col gap-2">
-                            {mainOeuvres.map((mo) => (
-                                <li key={mo.id} className="grid grid-cols-[1fr_auto_auto] items-start gap-x-4 text-sm">
-                                    <span className="text-muted-foreground">{mo.libelle}</span>
-                                    <span className="text-foreground">{mo.nombre_heures_chantier}h chantier</span>
-                                    <span className="text-foreground">{mo.nombre_heures_mini_pelle}h mini-pelle</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </section>
-                )}
-
-                <div className="flex justify-center">
-                    <Button type="button" onClick={() => setMainOeuvreDialogOpen(true)}>
-                        + Ajouter main d'œuvre
-                    </Button>
-                </div>
+            <div className="flex justify-center">
+                <Button type="button" onClick={() => setMainOeuvreDialogOpen(true)}>
+                    + Ajouter main d'œuvre
+                </Button>
             </div>
-
-            <AjouterMainOeuvreDialog
-                devisId={devisId}
-                open={mainOeuvreDialogOpen}
-                onClose={() => setMainOeuvreDialogOpen(false)}
-            />
         </div>
-    );
+
+        <AjouterMainOeuvreDialog
+            devisId={devisId}
+            open={mainOeuvreDialogOpen}
+            onClose={() => setMainOeuvreDialogOpen(false)}
+        />
+    </div>
+);
 }
+
