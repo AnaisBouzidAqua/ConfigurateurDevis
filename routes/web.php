@@ -13,12 +13,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/scenarios', [ScenarioController::class, 'index'])->name('scenarios.index');
     Route::get('/scenarios/{scenario}', [ScenarioController::class, 'show'])->name('scenarios.show');
     Route::post('/scenarios/{scenario}/rubriques', [RubriqueController::class, 'store'])->name('scenarios.rubriques.store');
+    Route::put('/scenarios/{scenario}/rubriques/reorder', [RubriqueController::class, 'reorder'])->name('scenarios.rubriques.reorder');
 
     Route::put('/rubriques/{rubrique}', [RubriqueController::class, 'update'])->name('rubriques.update');
     Route::post('/rubriques/{rubrique}/duplicate', [RubriqueController::class, 'duplicate'])->name('rubriques.duplicate');
     Route::delete('/rubriques/{rubrique}', [RubriqueController::class, 'destroy'])->name('rubriques.destroy');
 
     Route::post('/rubriques/{rubrique}/questions', [QuestionController::class, 'store'])->name('rubriques.questions.store');
+    Route::put('/rubriques/{rubrique}/questions/reorder', [QuestionController::class, 'reorder'])->name('rubriques.questions.reorder');
     Route::post('/questions/{question}/duplicate', [QuestionController::class, 'duplicate'])->name('questions.duplicate');
     Route::delete('/questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
     Route::put('/questions/{question}', [QuestionController::class, 'update'])->name('questions.update');

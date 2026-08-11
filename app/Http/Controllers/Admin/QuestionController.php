@@ -90,6 +90,26 @@ class QuestionController extends Controller
         return redirect()->route('admin.scenarios.show', $scenarioId);
     }
 
+    /**
+     * Enregistre le nouvel ordre des questions d'une rubrique, déterminé par
+     * un glisser-déposer côté admin.
+     */
+    public function reorder(Request $request, Rubrique $rubrique)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:questions,id',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['ids'] as $index => $id) {
+                Question::whereKey($id)->update(['ordre' => $index]);
+            }
+        });
+
+        return redirect()->route('admin.scenarios.show', $rubrique->scenario_id);
+    }
+
 
     public function update(Request $request, Question $question)
     {

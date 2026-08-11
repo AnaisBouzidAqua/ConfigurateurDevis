@@ -1,3 +1,7 @@
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { router, useForm } from '@inertiajs/react';
 import { ChevronDown, Copy, GripVertical, MoreVertical, Pencil, Trash2, Layers } from 'lucide-react';
 import { useState } from 'react';
@@ -57,18 +61,195 @@ export interface Produit {
 }
 
 interface Props {
+    scenarioId: number;
     rubriques: Rubrique[];
     questions: Question[];
     produits: Produit[];
 }
 
-export default function RubriquesSection({ rubriques, questions, produits }: Props) {
+interface SortableQuestionProps {
+    question: Question;
+    onEdit: (question: Question) => void;
+    onDuplicate: (question: Question) => void;
+    onDelete: (question: Question) => void;
+}
+
+function SortableQuestion({ question, onEdit, onDuplicate, onDelete }: SortableQuestionProps) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: question.id });
+
+    return (
+        <li
+            ref={setNodeRef}
+            style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+            className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
+        >
+            <div className="flex items-center gap-2">
+                <GripVertical
+                    className="text-muted-foreground size-4 cursor-grab touch-none"
+                    {...attributes}
+                    {...listeners}
+                />
+                <span className="text-muted-foreground">{question.texte}</span>
+            </div>
+            <DropdownMenu>
+                <DropdownMenuIconTrigger>
+                    <MoreVertical className="size-4" />
+                </DropdownMenuIconTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onEdit(question)}>
+                        <Pencil /> Modifier
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onDuplicate(question)}>
+                        <Copy /> Dupliquer
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem variant="destructive" onClick={() => onDelete(question)}>
+                        <Trash2 /> Supprimer
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </li>
+    );
+}
+
+interface SortableRubriqueProps {
+    rubrique: Rubrique;
+    onRename: (rubrique: Rubrique) => void;
+    onDuplicate: (rubrique: Rubrique) => void;
+    onDelete: (rubrique: Rubrique) => void;
+    onAddQuestion: (rubrique: Rubrique) => void;
+    onEditQuestion: (question: Question) => void;
+    onDuplicateQuestion: (question: Question) => void;
+    onDeleteQuestion: (question: Question) => void;
+    onQuestionsReordered: (rubriqueId: number, questions: Question[]) => void;
+}
+
+function SortableRubrique({
+    rubrique,
+    onRename,
+    onDuplicate,
+    onDelete,
+    onAddQuestion,
+    onEditQuestion,
+    onDuplicateQuestion,
+    onDeleteQuestion,
+    onQuestionsReordered,
+}: SortableRubriqueProps) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: rubrique.id });
+    const questionSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+    function handleQuestionDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+
+        if (!over || active.id === over.id) {
+            return;
+        }
+
+        const oldIndex = rubrique.questions.findIndex((question) => question.id === active.id);
+        const newIndex = rubrique.questions.findIndex((question) => question.id === over.id);
+        const reordonnees = arrayMove(rubrique.questions, oldIndex, newIndex);
+
+        onQuestionsReordered(rubrique.id, reordonnees);
+
+        router.put(
+            `/admin/rubriques/${rubrique.id}/questions/reorder`,
+            { ids: reordonnees.map((question) => question.id) },
+            { preserveState: true, preserveScroll: true },
+        );
+    }
+
+    return (
+        <li
+            ref={setNodeRef}
+            style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+            className="rounded-md border bg-card"
+        >
+            <Collapsible>
+                <div className="flex items-center gap-2 px-4 py-2">
+                    <GripVertical
+                        className="text-muted-foreground size-4 cursor-grab touch-none"
+                        {...attributes}
+                        {...listeners}
+                    />
+                    <CollapsibleTrigger className="flex flex-1 items-center justify-between text-left [&[data-state=open]_svg]:rotate-180">
+                        <span className="font-semibold">{rubrique.titre}</span>
+                        <ChevronDown className="size-4 transition-transform" />
+                    </CollapsibleTrigger>
+
+                    <DropdownMenu>
+                        <DropdownMenuIconTrigger>
+                            <MoreVertical className="size-4" />
+                        </DropdownMenuIconTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onRename(rubrique)}>
+                                <Pencil /> Renommer
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onDuplicate(rubrique)}>
+                                <Copy /> Dupliquer
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem variant="destructive" onClick={() => onDelete(rubrique)}>
+                                <Trash2 /> Supprimer
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+                <CollapsibleContent className="px-4 pb-3 pl-10">
+                    {rubrique.questions.length > 0 && (
+                        <DndContext
+                            sensors={questionSensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleQuestionDragEnd}
+                        >
+                            <SortableContext
+                                items={rubrique.questions.map((question) => question.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
+                                <ul className="mb-3 divide-y rounded-md border bg-background">
+                                    {rubrique.questions.map((question) => (
+                                        <SortableQuestion
+                                            key={question.id}
+                                            question={question}
+                                            onEdit={onEditQuestion}
+                                            onDuplicate={onDuplicateQuestion}
+                                            onDelete={onDeleteQuestion}
+                                        />
+                                    ))}
+                                </ul>
+                            </SortableContext>
+                        </DndContext>
+                    )}
+                    <div className="flex justify-center">
+                        <Button type="button" className="rounded-full" onClick={() => onAddQuestion(rubrique)}>
+                            + Ajouter une question
+                        </Button>
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
+        </li>
+    );
+}
+
+export default function RubriquesSection({ scenarioId, rubriques, questions, produits }: Props) {
     const [editQuestionTarget, setEditQuestionTarget] = useState<Question | null>(null);
     const [deleteQuestionTarget, setDeleteQuestionTarget] = useState<Question | null>(null);
 
     const [renameTarget, setRenameTarget] = useState<Rubrique | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Rubrique | null>(null);
     const [questionRubrique, setQuestionRubrique] = useState<Rubrique | null>(null);
+
+    const [rubriquesLocal, setRubriquesLocal] = useState(rubriques);
+    const [rubriquesPropPrecedent, setRubriquesPropPrecedent] = useState(rubriques);
+    const rubriqueSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+    // Resynchronise la copie locale (utilisée pour le drag-and-drop) quand la
+    // prop change pour une autre raison qu'un reorder (ajout/suppression/
+    // renommage) — pattern "adjusting state during render" plutôt qu'un
+    // useEffect, pour éviter un rendu en cascade.
+    if (rubriques !== rubriquesPropPrecedent) {
+        setRubriquesPropPrecedent(rubriques);
+        setRubriquesLocal(rubriques);
+    }
 
     const renameForm = useForm({ titre: '', bulle_infos: '' });
 
@@ -122,98 +303,70 @@ export default function RubriquesSection({ rubriques, questions, produits }: Pro
         });
     }
 
+    function handleQuestionsReordered(rubriqueId: number, questionsReordonnees: Question[]) {
+        setRubriquesLocal((prev) =>
+            prev.map((rubrique) =>
+                rubrique.id === rubriqueId ? { ...rubrique, questions: questionsReordonnees } : rubrique,
+            ),
+        );
+    }
+
+    function handleRubriqueDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+
+        if (!over || active.id === over.id) {
+            return;
+        }
+
+        const oldIndex = rubriquesLocal.findIndex((rubrique) => rubrique.id === active.id);
+        const newIndex = rubriquesLocal.findIndex((rubrique) => rubrique.id === over.id);
+        const reordonnees = arrayMove(rubriquesLocal, oldIndex, newIndex);
+
+        setRubriquesLocal(reordonnees);
+
+        router.put(
+            `/admin/scenarios/${scenarioId}/rubriques/reorder`,
+            { ids: reordonnees.map((rubrique) => rubrique.id) },
+            { preserveState: true, preserveScroll: true },
+        );
+    }
+
     return (
         <section>
-            {rubriques.length === 0 ? (
+            {rubriquesLocal.length === 0 ? (
                 <EmptyState
                     icon={Layers}
                     title="Aucune section pour l'instant."
                     description="Clique sur « + Ajouter une section » pour commencer."
                 />
             ) : (
-                <ul className="mx-auto flex max-w-4xl flex-col gap-2">
-                    {rubriques.map((rubrique) => (
-                        <li key={rubrique.id} className="rounded-md border bg-card">
-                            <Collapsible>
-                                <div className="flex items-center gap-2 px-4 py-2">
-                                    <GripVertical className="size-4 cursor-grab text-muted-foreground" />
-                                    <CollapsibleTrigger className="flex flex-1 items-center justify-between text-left [&[data-state=open]_svg]:rotate-180">
-                                        <span className="font-semibold">{rubrique.titre}</span>
-                                        <ChevronDown className="size-4 transition-transform" />
-                                    </CollapsibleTrigger>
-
-                                    <DropdownMenu>
-                                        <DropdownMenuIconTrigger>
-                                            <MoreVertical className="size-4" />
-                                        </DropdownMenuIconTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => openRename(rubrique)}>
-                                                <Pencil /> Renommer
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleDuplicate(rubrique)}>
-                                                <Copy /> Dupliquer
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                variant="destructive"
-                                                onClick={() => setDeleteTarget(rubrique)}
-                                            >
-                                                <Trash2 /> Supprimer
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                                <CollapsibleContent className="px-4 pb-3 pl-10">
-                                    {rubrique.questions.length > 0 && (
-                                        <ul className="mb-3 divide-y rounded-md border bg-background">
-                                            {rubrique.questions.map((question) => (
-                                                <li
-                                                    key={question.id}
-                                                    className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
-                                                >
-                                                    <span className="text-muted-foreground">{question.texte}</span>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuIconTrigger>
-                                                            <MoreVertical className="size-4" />
-                                                        </DropdownMenuIconTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem
-                                                                onClick={() => setEditQuestionTarget(question)}
-                                                            >
-                                                                <Pencil /> Modifier
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem
-                                                                onClick={() => handleDuplicateQuestion(question)}
-                                                            >
-                                                                <Copy /> Dupliquer
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem
-                                                                variant="destructive"
-                                                                onClick={() => setDeleteQuestionTarget(question)}
-                                                            >
-                                                                <Trash2 /> Supprimer
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                    <div className="flex justify-center">
-                                        <Button
-                                            type="button"
-                                            className="rounded-full"
-                                            onClick={() => setQuestionRubrique(rubrique)}
-                                        >
-                                            + Ajouter une question
-                                        </Button>
-                                    </div>
-                                </CollapsibleContent>
-                            </Collapsible>
-                        </li>
-                    ))}
-                </ul>
+                <DndContext
+                    sensors={rubriqueSensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleRubriqueDragEnd}
+                >
+                    <SortableContext
+                        items={rubriquesLocal.map((rubrique) => rubrique.id)}
+                        strategy={verticalListSortingStrategy}
+                    >
+                        <ul className="mx-auto flex max-w-4xl flex-col gap-2">
+                            {rubriquesLocal.map((rubrique) => (
+                                <SortableRubrique
+                                    key={rubrique.id}
+                                    rubrique={rubrique}
+                                    onRename={openRename}
+                                    onDuplicate={handleDuplicate}
+                                    onDelete={setDeleteTarget}
+                                    onAddQuestion={setQuestionRubrique}
+                                    onEditQuestion={setEditQuestionTarget}
+                                    onDuplicateQuestion={handleDuplicateQuestion}
+                                    onDeleteQuestion={setDeleteQuestionTarget}
+                                    onQuestionsReordered={handleQuestionsReordered}
+                                />
+                            ))}
+                        </ul>
+                    </SortableContext>
+                </DndContext>
             )}
 
             <Dialog open={renameTarget !== null} onOpenChange={(open) => !open && setRenameTarget(null)}>
@@ -311,7 +464,7 @@ export default function RubriquesSection({ rubriques, questions, produits }: Pro
             <AjouterQuestionDialog
                 rubrique={questionRubrique}
                 onClose={() => setQuestionRubrique(null)}
-                rubriques={rubriques}
+                rubriques={rubriquesLocal}
                 questions={questions}
                 produits={produits}
             />
@@ -320,7 +473,7 @@ export default function RubriquesSection({ rubriques, questions, produits }: Pro
                     key={editQuestionTarget.id}
                     question={editQuestionTarget}
                     onClose={() => setEditQuestionTarget(null)}
-                    rubriques={rubriques}
+                    rubriques={rubriquesLocal}
                     questions={questions}
                     produits={produits}
                 />

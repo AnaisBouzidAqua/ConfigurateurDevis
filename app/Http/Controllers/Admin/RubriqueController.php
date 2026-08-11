@@ -80,4 +80,24 @@ class RubriqueController extends Controller
 
         return redirect()->route('admin.scenarios.show', $scenarioId);
     }
+
+    /**
+     * Enregistre le nouvel ordre des rubriques d'un scénario, déterminé par
+     * un glisser-déposer côté admin.
+     */
+    public function reorder(Request $request, Scenario $scenario)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:rubriques,id',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['ids'] as $index => $id) {
+                Rubrique::whereKey($id)->update(['ordre' => $index]);
+            }
+        });
+
+        return redirect()->route('admin.scenarios.show', $scenario);
+    }
 }

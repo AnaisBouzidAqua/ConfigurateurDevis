@@ -154,6 +154,7 @@ export default function Show({ scenario, questions, produits }: Props) {
                 </div>
 
                 <RubriquesSection
+                    scenarioId={scenario.id}
                     rubriques={scenario.rubriques}
                     questions={questions}
                     produits={produits}
