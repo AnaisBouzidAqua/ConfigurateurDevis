@@ -1,10 +1,13 @@
-import { Copy, List, Package, PenLine, Trash2, X } from 'lucide-react';
+import { Check, ChevronsUpDown, Copy, List, Package, PenLine, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { RequiredMark } from '@/components/required-mark';
 import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 import type { Produit, Question, Rubrique } from './RubriquesSection';
 
 export interface ReponseDataProduit {
@@ -54,9 +57,14 @@ export function ReponseCard({
 
     const [modeAjout, setModeAjout] = useState<'catalogue' | 'libre'>('catalogue');
     const [produitRef, setProduitRef] = useState('');
+    const [produitComboboxOuvert, setProduitComboboxOuvert] = useState(false);
     const [libelleLibre, setLibelleLibre] = useState('');
     const [prixLibre, setPrixLibre] = useState('');
     const [quantite, setQuantite] = useState(1);
+
+    // produitRef vaut '' par defaut ; ne pas matcher un produit dont la reference
+    // AquaConnect est elle-meme vide, sinon il apparait selectionne par defaut.
+    const produitSelectionne = produitRef !== '' ? produits.find((produit) => produit.ref === produitRef) : undefined;
 
     function addProduitCatalogue() {
         if (!produitRef.trim()) {
@@ -243,25 +251,63 @@ export function ReponseCard({
                             </Tooltip>
                         </div>
 
-                        <div className="flex items-end gap-2">
+                        <div className="flex flex-wrap items-end gap-2">
                             {modeAjout === 'catalogue' ? (
                                 <div className="grid min-w-0 flex-1 gap-1">
                                     <Label htmlFor={`${prefix}_produit_ref`} className="text-xs">
                                         Référence produit <RequiredMark />
                                     </Label>
-                                    <select
-                                        id={`${prefix}_produit_ref`}
-                                        value={produitRef}
-                                        onChange={(e) => setProduitRef(e.target.value)}
-                                        className="w-full rounded-md border px-3 py-1.5 text-sm"
-                                    >
-                                        <option value="">Choisir un produit</option>
-                                        {produits.map((produit) => (
-                                            <option key={produit.id} value={produit.ref}>
-                                                {produit.nom} ({produit.ref})
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <Popover open={produitComboboxOuvert} onOpenChange={setProduitComboboxOuvert}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                id={`${prefix}_produit_ref`}
+                                                type="button"
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={produitComboboxOuvert}
+                                                className={cn(
+                                                    'w-full min-w-0 justify-between font-normal',
+                                                    !produitSelectionne && 'border-input text-muted-foreground hover:text-muted-foreground',
+                                                )}
+                                            >
+                                                <span className="min-w-0 truncate">
+                                                    {produitSelectionne
+                                                        ? `${produitSelectionne.nom} (${produitSelectionne.ref})`
+                                                        : 'Choisir un produit'}
+                                                </span>
+                                                <ChevronsUpDown className="text-muted-foreground size-4 shrink-0" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                                            <Command>
+                                                <CommandInput placeholder="Rechercher par nom ou référence" />
+                                                <CommandList>
+                                                    <CommandEmpty>Aucun produit ne correspond.</CommandEmpty>
+                                                    <CommandGroup>
+                                                        {produits.map((produit) => {
+                                                            const estSelectionne = produit.ref !== '' && produit.ref === produitRef;
+
+                                                            return (
+                                                                <CommandItem
+                                                                    key={produit.id}
+                                                                    value={`${produit.nom} ${produit.ref}`}
+                                                                    onSelect={() => {
+                                                                        setProduitRef(estSelectionne ? '' : produit.ref);
+                                                                        setProduitComboboxOuvert(false);
+                                                                    }}
+                                                                >
+                                                                    <Check
+                                                                        className={cn('size-4', estSelectionne ? 'opacity-100' : 'opacity-0')}
+                                                                    />
+                                                                    {produit.nom} ({produit.ref})
+                                                                </CommandItem>
+                                                            );
+                                                        })}
+                                                    </CommandGroup>
+                                                </CommandList>
+                                            </Command>
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             ) : (
                                 <>
@@ -311,6 +357,7 @@ export function ReponseCard({
                                 variant="outline"
                                 disabled={modeAjout === 'catalogue' ? !produitRef.trim() : !libelleLibreValide || !prixLibreValide}
                                 onClick={modeAjout === 'catalogue' ? addProduitCatalogue : addProduitLibre}
+                                className="shrink-0"
                             >
                                 Ajouter
                             </Button>
