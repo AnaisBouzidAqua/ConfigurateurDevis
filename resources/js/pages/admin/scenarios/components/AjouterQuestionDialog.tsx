@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ReponseCard, type ReponseData } from './ReponseCard';
+import { ReponseCard } from './ReponseCard';
+import type { ReponseData, ReponseDataProduit } from './ReponseCard';
 import type { Question, Rubrique, Produit } from './RubriquesSection';
 
 interface AjouterQuestionDialogProps {
@@ -27,7 +28,7 @@ export function AjouterQuestionDialog({ rubrique, onClose, rubriques, questions,
                 libelle: '',
                 rubrique_suivante_id: '',
                 question_suivante_id: '',
-                produits: [] as { produit_ref: string; quantite: number }[],
+                produits: [] as ReponseDataProduit[],
             },
         ],
     });

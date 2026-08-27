@@ -60,6 +60,8 @@ class RubriqueController extends Controller
                     foreach ($option->produits as $produit) {
                         $optionCopie->produits()->create([
                             'produit_ref' => $produit->produit_ref,
+                            'libelle_libre' => $produit->libelle_libre,
+                            'prix_libre' => $produit->prix_libre,
                             'quantite' => $produit->quantite,
                         ]);
                     }

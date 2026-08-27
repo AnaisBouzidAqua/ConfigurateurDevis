@@ -25,7 +25,9 @@ class QuestionController extends Controller
             'reponses.*.rubrique_suivante_id' => 'nullable|exists:rubriques,id',
             'reponses.*.question_suivante_id' => 'nullable|exists:questions,id',
             'reponses.*.produits' => 'array',
-            'reponses.*.produits.*.produit_ref' => 'required|string|max:255',
+            'reponses.*.produits.*.produit_ref' => 'nullable|string|max:255|required_without:reponses.*.produits.*.libelle_libre',
+            'reponses.*.produits.*.libelle_libre' => 'nullable|string|max:255|required_without:reponses.*.produits.*.produit_ref',
+            'reponses.*.produits.*.prix_libre' => 'nullable|numeric|min:0|required_with:reponses.*.produits.*.libelle_libre',
             'reponses.*.produits.*.quantite' => 'required|integer|min:1',
         ]);
 
@@ -70,6 +72,8 @@ class QuestionController extends Controller
                 foreach ($option->produits as $produit) {
                     $optionCopie->produits()->create([
                         'produit_ref' => $produit->produit_ref,
+                        'libelle_libre' => $produit->libelle_libre,
+                        'prix_libre' => $produit->prix_libre,
                         'quantite' => $produit->quantite,
                     ]);
                 }
@@ -121,7 +125,9 @@ class QuestionController extends Controller
             'reponses.*.rubrique_suivante_id' => 'nullable|exists:rubriques,id',
             'reponses.*.question_suivante_id' => 'nullable|exists:questions,id',
             'reponses.*.produits' => 'array',
-            'reponses.*.produits.*.produit_ref' => 'required|string|max:255',
+            'reponses.*.produits.*.produit_ref' => 'nullable|string|max:255|required_without:reponses.*.produits.*.libelle_libre',
+            'reponses.*.produits.*.libelle_libre' => 'nullable|string|max:255|required_without:reponses.*.produits.*.produit_ref',
+            'reponses.*.produits.*.prix_libre' => 'nullable|numeric|min:0|required_with:reponses.*.produits.*.libelle_libre',
             'reponses.*.produits.*.quantite' => 'required|integer|min:1',
         ]);
 

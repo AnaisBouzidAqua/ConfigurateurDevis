@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class QuestionOptionProduit extends Model
 {
-    protected $fillable = ['question_option_id', 'produit_ref', 'quantite'];
+    protected $fillable = ['question_option_id', 'produit_ref', 'libelle_libre', 'prix_libre', 'quantite'];
 
     protected $touches = ['questionOption'];
 

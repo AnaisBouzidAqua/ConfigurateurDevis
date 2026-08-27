@@ -7,8 +7,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ReponseCard  } from './ReponseCard';
-import type {ReponseData} from './ReponseCard';
+import { ReponseCard } from './ReponseCard';
+import type { ReponseData, ReponseDataProduit } from './ReponseCard';
 import type { Question, Rubrique, Produit } from './RubriquesSection';
 
 interface ModifierQuestionDialogProps {
@@ -30,6 +30,8 @@ export function ModifierQuestionDialog({ question, onClose, rubriques, questions
             question_suivante_id: option.question_suivante_id?.toString() ?? '',
             produits: option.produits.map((produit) => ({
                 produit_ref: produit.produit_ref,
+                libelle_libre: produit.libelle_libre,
+                prix_libre: produit.prix_libre,
                 quantite: produit.quantite,
             })),
         })),
@@ -49,7 +51,7 @@ export function ModifierQuestionDialog({ question, onClose, rubriques, questions
                 libelle: '',
                 rubrique_suivante_id: '',
                 question_suivante_id: '',
-                produits: [],
+                produits: [] as ReponseDataProduit[],
             },
         ]);
     }

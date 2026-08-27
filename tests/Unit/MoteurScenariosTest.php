@@ -160,3 +160,27 @@ test('se protege contre une boucle de redirections', function () {
     // Ne doit pas boucler indefiniment ; simplement s'arreter sans produits.
     expect($produits)->toHaveCount(0);
 });
+
+test('garde les produits libres separes au lieu de les fusionner', function () {
+    $scenario = Scenario::create(['famille' => 'Test', 'nom' => 'ProduitLibre']);
+    $rubrique = creerRubrique($scenario, 'Section');
+
+    $question1 = creerQuestion($rubrique, 'Question 1');
+    $reponse1 = creerReponse($question1, 'Reponse 1');
+    $reponse1->produits()->create(['libelle_libre' => 'Prestation A', 'prix_libre' => 100, 'quantite' => 1]);
+
+    $question2 = creerQuestion($rubrique, 'Question 2');
+    $reponse2 = creerReponse($question2, 'Reponse 2');
+    $reponse2->produits()->create(['libelle_libre' => 'Prestation B', 'prix_libre' => 200, 'quantite' => 2]);
+
+    // Si le regroupement se faisait toujours par produit_ref (null pour les
+    // deux produits libres), ils fusionneraient en une seule ligne.
+    $produits = (new MoteurScenarios)->resoudre($scenario, [
+        $question1->id => $reponse1->id,
+        $question2->id => $reponse2->id,
+    ]);
+
+    expect($produits)->toHaveCount(2);
+    expect($produits->firstWhere('libelle_libre', 'Prestation A')['quantite'])->toBe(1);
+    expect($produits->firstWhere('libelle_libre', 'Prestation B')['quantite'])->toBe(2);
+});

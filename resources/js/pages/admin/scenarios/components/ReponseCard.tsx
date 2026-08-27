@@ -1,16 +1,24 @@
-import { Copy, Package, Trash2, X } from 'lucide-react';
+import { Copy, List, Package, PenLine, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { RequiredMark } from '@/components/required-mark';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Produit, Question, Rubrique } from './RubriquesSection';
+
+export interface ReponseDataProduit {
+    produit_ref: string | null;
+    libelle_libre: string | null;
+    prix_libre: number | null;
+    quantite: number;
+}
 
 export interface ReponseData {
     libelle: string;
     rubrique_suivante_id: string;
     question_suivante_id: string;
-    produits: { produit_ref: string; quantite: number }[];
+    produits: ReponseDataProduit[];
 }
 
 interface ReponseCardProps {
@@ -44,18 +52,43 @@ export function ReponseCard({
     // (plusieurs ReponseCard sont rendues côte à côte dans le même formulaire).
     const prefix = `q_${index}`;
 
+    const [modeAjout, setModeAjout] = useState<'catalogue' | 'libre'>('catalogue');
     const [produitRef, setProduitRef] = useState('');
+    const [libelleLibre, setLibelleLibre] = useState('');
+    const [prixLibre, setPrixLibre] = useState('');
     const [quantite, setQuantite] = useState(1);
 
-    function addProduit() {
+    function addProduitCatalogue() {
         if (!produitRef.trim()) {
             return;
         }
 
         onChange({
-            produits: [...reponse.produits, { produit_ref: produitRef.trim(), quantite }],
+            produits: [
+                ...reponse.produits,
+                { produit_ref: produitRef.trim(), libelle_libre: null, prix_libre: null, quantite },
+            ],
         });
         setProduitRef('');
+        setQuantite(1);
+    }
+
+    const libelleLibreValide = libelleLibre.trim() !== '';
+    const prixLibreValide = prixLibre !== '' && !Number.isNaN(Number(prixLibre)) && Number(prixLibre) >= 0;
+
+    function addProduitLibre() {
+        if (!libelleLibreValide || !prixLibreValide) {
+            return;
+        }
+
+        onChange({
+            produits: [
+                ...reponse.produits,
+                { produit_ref: null, libelle_libre: libelleLibre.trim(), prix_libre: Number(prixLibre), quantite },
+            ],
+        });
+        setLibelleLibre('');
+        setPrixLibre('');
         setQuantite(1);
     }
 
@@ -148,15 +181,20 @@ export function ReponseCard({
                 <div className="flex flex-col gap-2">
                     <Label>Associer un produit</Label>
 
-                    <div className="grid flex-1 gap-2 rounded-md border p-3">
+                    <div className="grid flex-1 gap-3 rounded-md border p-3">
                         {reponse.produits.length > 0 ? (
                             <ul className="flex flex-wrap gap-2">
                                 {reponse.produits.map((produit, produitIndex) => (
                                     <li
                                         key={produitIndex}
-                                        className="flex items-center gap-1 rounded-full border py-1 pr-1 pl-3 text-sm"
+                                        className={`flex items-center gap-1.5 rounded-full border py-1 pr-1 pl-3 text-sm ${
+                                            produit.produit_ref ? '' : 'border-dashed'
+                                        }`}
                                     >
-                                        {produit.quantite} × {produits.find((p) => p.ref === produit.produit_ref)?.nom ?? produit.produit_ref}
+                                        {!produit.produit_ref && <PenLine className="text-muted-foreground size-3.5" />}
+                                        {produit.produit_ref
+                                            ? `${produit.quantite} × ${produits.find((p) => p.ref === produit.produit_ref)?.nom ?? produit.produit_ref}`
+                                            : `${produit.quantite} × ${produit.libelle_libre} (${produit.prix_libre} €)`}
                                         <button
                                             type="button"
                                             onClick={() => removeProduit(produitIndex)}
@@ -174,42 +212,125 @@ export function ReponseCard({
                             </div>
                         )}
 
-                        <div className="flex items-end gap-2">
-                            <div className="grid min-w-0 flex-1 gap-1">
-                                <Label htmlFor={`${prefix}_produit_ref`} className="text-xs">
-                                    Référence produit
-                                </Label>
-                                <select
-                                    id={`${prefix}_produit_ref`}
-                                    value={produitRef}
-                                    onChange={(e) => setProduitRef(e.target.value)}
-                                    className="w-full rounded-md border px-3 py-1.5 text-sm"
+                        <div className="flex gap-1">
+                            <Tooltip>
+                                <TooltipTrigger
+                                    type="button"
+                                    onClick={() => setModeAjout('catalogue')}
+                                    className={`flex size-8 items-center justify-center rounded-md border transition-colors ${
+                                        modeAjout === 'catalogue'
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'text-muted-foreground hover:text-foreground border-transparent'
+                                    }`}
                                 >
-                                    <option value="">Choisir un produit</option>
-                                    {produits.map((produit) => (
-                                        <option key={produit.id} value={produit.ref}>
-                                            {produit.nom} ({produit.ref})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="grid w-20 shrink-0 gap-1">
-                                <Label htmlFor={`${prefix}_quantite`} className="text-xs">
-                                    Qté
-                                </Label>
-                                <Input
-                                    id={`${prefix}_quantite`}
-                                    type="number"
-                                    min={1}
-                                    value={quantite}
-                                    onChange={(e) => setQuantite(Number(e.target.value))}
-                                />
-                            </div>
-                            <Button type="button" variant="outline" onClick={addProduit}>
-                                Ajouter
-                            </Button>
+                                    <List className="size-4" />
+                                </TooltipTrigger>
+                                <TooltipContent>Depuis le catalogue</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger
+                                    type="button"
+                                    onClick={() => setModeAjout('libre')}
+                                    className={`flex size-8 items-center justify-center rounded-md border transition-colors ${
+                                        modeAjout === 'libre'
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'text-muted-foreground hover:text-foreground border-transparent'
+                                    }`}
+                                >
+                                    <PenLine className="size-4" />
+                                </TooltipTrigger>
+                                <TooltipContent>Produit libre</TooltipContent>
+                            </Tooltip>
                         </div>
+
+                        {modeAjout === 'catalogue' ? (
+                            <div className="flex items-end gap-2">
+                                <div className="grid min-w-0 flex-1 gap-1">
+                                    <Label htmlFor={`${prefix}_produit_ref`} className="text-xs">
+                                        Référence produit <RequiredMark />
+                                    </Label>
+                                    <select
+                                        id={`${prefix}_produit_ref`}
+                                        value={produitRef}
+                                        onChange={(e) => setProduitRef(e.target.value)}
+                                        className="w-full rounded-md border px-3 py-1.5 text-sm"
+                                    >
+                                        <option value="">Choisir un produit</option>
+                                        {produits.map((produit) => (
+                                            <option key={produit.id} value={produit.ref}>
+                                                {produit.nom} ({produit.ref})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="grid w-20 shrink-0 gap-1">
+                                    <Label htmlFor={`${prefix}_quantite`} className="text-xs">
+                                        Qté
+                                    </Label>
+                                    <Input
+                                        id={`${prefix}_quantite`}
+                                        type="number"
+                                        min={1}
+                                        value={quantite}
+                                        onChange={(e) => setQuantite(Number(e.target.value))}
+                                    />
+                                </div>
+                                <Button type="button" variant="outline" disabled={!produitRef.trim()} onClick={addProduitCatalogue}>
+                                    Ajouter
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="flex items-end gap-2">
+                                <div className="grid min-w-0 flex-1 gap-1">
+                                    <Label htmlFor={`${prefix}_libelle_libre`} className="text-xs">
+                                        Libellé <RequiredMark />
+                                    </Label>
+                                    <Input
+                                        id={`${prefix}_libelle_libre`}
+                                        value={libelleLibre}
+                                        onChange={(e) => setLibelleLibre(e.target.value)}
+                                        placeholder="Ex : Prestation d'étude"
+                                    />
+                                </div>
+
+                                <div className="grid w-24 shrink-0 gap-1">
+                                    <Label htmlFor={`${prefix}_prix_libre`} className="text-xs">
+                                        Montant (€) <RequiredMark />
+                                    </Label>
+                                    <Input
+                                        id={`${prefix}_prix_libre`}
+                                        type="number"
+                                        min={0}
+                                        step="0.01"
+                                        placeholder="0,00"
+                                        value={prixLibre}
+                                        onChange={(e) => setPrixLibre(e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="grid w-20 shrink-0 gap-1">
+                                    <Label htmlFor={`${prefix}_quantite_libre`} className="text-xs">
+                                        Qté
+                                    </Label>
+                                    <Input
+                                        id={`${prefix}_quantite_libre`}
+                                        type="number"
+                                        min={1}
+                                        value={quantite}
+                                        onChange={(e) => setQuantite(Number(e.target.value))}
+                                    />
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={!libelleLibreValide || !prixLibreValide}
+                                    onClick={addProduitLibre}
+                                >
+                                    Ajouter
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

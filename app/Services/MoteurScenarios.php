@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Question;
 use App\Models\QuestionOption;
+use App\Models\QuestionOptionProduit;
 use App\Models\Scenario;
 use Illuminate\Support\Collection;
 
@@ -14,7 +15,7 @@ class MoteurScenarios
      * donnees, et calcule les produits a ajouter au devis.
      *
      * @param  array<int, int>  $reponses  Reponses du franchise, au format [question_id => question_option_id].
-     * @return Collection<int, array{produit_ref: string, quantite: int}>
+     * @return Collection<int, array{produit_ref: ?string, libelle_libre: ?string, prix_libre: ?float, quantite: int}>
      */
     public function resoudre(Scenario $scenario, array $reponses): Collection
     {
@@ -36,7 +37,7 @@ class MoteurScenarios
 
     /**
      * @param  array<int, int>  $reponses
-     * @return array{produits: Collection<int, array{produit_ref: string, quantite: int}>, questions: Collection<int, Question>}
+     * @return array{produits: Collection<int, array{produit_ref: ?string, libelle_libre: ?string, prix_libre: ?float, quantite: int}>, questions: Collection<int, Question>}
      */
     private function parcourir(Scenario $scenario, array $reponses): array
     {
@@ -75,10 +76,17 @@ class MoteurScenarios
             $questionCourante = $this->questionSuivante($questions, $questionCourante, $optionChoisie);
         }
 
+        // Les produits du catalogue se cumulent par reference (meme produit
+        // declenche plusieurs fois = quantites additionnees). Les produits
+        // libres n'ont pas de reference commune : chacun reste sa propre
+        // ligne, sinon ils fusionneraient tous ensemble sous une cle "null".
         $produits = $produitsDeclenches
-            ->groupBy('produit_ref')
-            ->map(fn (Collection $groupe) => [
+            ->groupBy(fn (QuestionOptionProduit $produit) => $produit->produit_ref ?? "libre-{$produit->id}")
+            ->map(fn (Collection $groupe, string $cle) => [
+                'cle' => $cle,
                 'produit_ref' => $groupe->first()->produit_ref,
+                'libelle_libre' => $groupe->first()->libelle_libre,
+                'prix_libre' => $groupe->first()->prix_libre,
                 'quantite' => $groupe->sum('quantite'),
             ])
             ->values();

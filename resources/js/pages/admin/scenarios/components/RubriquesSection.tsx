@@ -26,7 +26,9 @@ import { ModifierQuestionDialog } from './ModifierQuestionDialog';
 
 export interface QuestionOptionProduit {
     id: number;
-    produit_ref: string;
+    produit_ref: string | null;
+    libelle_libre: string | null;
+    prix_libre: number | null;
     quantite: number;
 }
 
