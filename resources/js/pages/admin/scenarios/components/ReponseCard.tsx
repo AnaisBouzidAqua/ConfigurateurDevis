@@ -266,8 +266,11 @@ export function ReponseCard({
                                                 role="combobox"
                                                 aria-expanded={produitComboboxOuvert}
                                                 className={cn(
-                                                    'w-full min-w-0 justify-between font-normal',
-                                                    !produitSelectionne && 'border-input text-muted-foreground hover:text-muted-foreground',
+                                                    'text-foreground hover:text-foreground w-full min-w-0 justify-between rounded-md border bg-transparent px-3 py-1 font-normal shadow-xs',
+                                                    produitComboboxOuvert
+                                                        ? 'border-ring ring-ring/50 ring-[3px]'
+                                                        : 'border-input hover:bg-transparent',
+                                                    !produitSelectionne && 'text-muted-foreground hover:text-muted-foreground',
                                                 )}
                                             >
                                                 <span className="min-w-0 truncate">
