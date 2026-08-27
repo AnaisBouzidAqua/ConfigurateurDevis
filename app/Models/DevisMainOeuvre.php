@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DevisMainOeuvre extends Model
 {
-    protected $fillable = ['devis_id', 'libelle', 'nombre_heures_chantier', 'nombre_heures_mini_pelle'];
+    protected $fillable = ['devis_id', 'libelle', 'description', 'nombre_heures_chantier', 'nombre_heures_mini_pelle'];
 
     public function devis()
     {
