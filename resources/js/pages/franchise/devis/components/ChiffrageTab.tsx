@@ -1,13 +1,14 @@
 import { router } from '@inertiajs/react';
-import { Info, Layers } from 'lucide-react';
+import { ChevronDown, Info, Layers } from 'lucide-react';
 import { useState } from 'react';
+import { EmptyState } from '@/components/empty-state';
 import { SectionTitle } from '@/components/section-title';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AjouterMainOeuvreDialog } from './AjouterMainOeuvreDialog';
-import { EmptyState } from '@/components/empty-state';
 
 
 interface QuestionOption {
@@ -43,9 +44,15 @@ interface DevisReponse {
 interface MainOeuvre {
     id: number;
     libelle: string;
+    description: string | null;
     nombre_heures_chantier: number;
     nombre_heures_mini_pelle: number;
     cout: number;
+}
+
+interface TauxHoraires {
+    chantier: number;
+    mini_pelle: number;
 }
 
 interface Props {
@@ -54,9 +61,17 @@ interface Props {
     reponses: DevisReponse[];
     visibleQuestionIds: number[];
     mainOeuvres: MainOeuvre[];
+    tauxHoraires: TauxHoraires;
 }
 
-export default function ChiffrageTab({ devisId, scenario, reponses, visibleQuestionIds, mainOeuvres }: Props) {
+export default function ChiffrageTab({
+    devisId,
+    scenario,
+    reponses,
+    visibleQuestionIds,
+    mainOeuvres,
+    tauxHoraires,
+}: Props) {
     const [answers, setAnswers] = useState<Record<number, string>>(
         Object.fromEntries(reponses.map((r) => [r.question_id, String(r.question_option_id)])),
     );
@@ -103,54 +118,59 @@ export default function ChiffrageTab({ devisId, scenario, reponses, visibleQuest
 
         <div className="flex flex-col gap-4">
             {visibleRubriques.map((rubrique) => (
-                <section
-                    key={rubrique.id}
-                    id={`rubrique-${rubrique.id}`}
-                    className="flex flex-col gap-4 rounded-md border p-4"
-                >
-                    <div className="flex items-center gap-1.5">
-                        <SectionTitle>{rubrique.titre}</SectionTitle>
-                        {rubrique.bulle_infos && (
-                            <Tooltip>
-                                <TooltipTrigger type="button">
-                                    <Info className="text-muted-foreground size-3.5" />
-                                </TooltipTrigger>
-                                <TooltipContent>{rubrique.bulle_infos}</TooltipContent>
-                            </Tooltip>
-                        )}
-                    </div>
-
-                    {rubrique.questions.map((question) => (
-                        <div key={question.id} className="grid gap-1.5">
+                <section key={rubrique.id} id={`rubrique-${rubrique.id}`} className="rounded-md border p-4">
+                    <Collapsible defaultOpen>
+                        <CollapsibleTrigger className="flex w-full items-center justify-between text-left [&[data-state=open]_svg]:rotate-180">
                             <div className="flex items-center gap-1.5">
-                                <Label>{question.texte}</Label>
-                                {question.infos_bulle && (
+                                <SectionTitle>{rubrique.titre}</SectionTitle>
+                                {rubrique.bulle_infos && (
                                     <Tooltip>
                                         <TooltipTrigger type="button">
                                             <Info className="text-muted-foreground size-3.5" />
                                         </TooltipTrigger>
-                                        <TooltipContent>{question.infos_bulle}</TooltipContent>
+                                        <TooltipContent>{rubrique.bulle_infos}</TooltipContent>
                                     </Tooltip>
                                 )}
                             </div>
+                            <ChevronDown className="text-muted-foreground size-4 shrink-0 transition-transform" />
+                        </CollapsibleTrigger>
 
-                            <RadioGroup
-                                value={answers[question.id] ?? ''}
-                                onValueChange={(value) => setAnswer(question.id, value)}
-                                className="flex flex-wrap gap-4"
-                            >
-                                {question.options.map((option) => (
-                                    <div key={option.id} className="flex items-center gap-2">
-                                        <RadioGroupItem
-                                            value={String(option.id)}
-                                            id={`q${question.id}_o${option.id}`}
-                                        />
-                                        <Label htmlFor={`q${question.id}_o${option.id}`}>{option.libelle}</Label>
+                        <CollapsibleContent className="flex flex-col gap-4 pt-4">
+                            {rubrique.questions.map((question) => (
+                                <div key={question.id} className="grid gap-1.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <Label>{question.texte}</Label>
+                                        {question.infos_bulle && (
+                                            <Tooltip>
+                                                <TooltipTrigger type="button">
+                                                    <Info className="text-muted-foreground size-3.5" />
+                                                </TooltipTrigger>
+                                                <TooltipContent>{question.infos_bulle}</TooltipContent>
+                                            </Tooltip>
+                                        )}
                                     </div>
-                                ))}
-                            </RadioGroup>
-                        </div>
-                    ))}
+
+                                    <RadioGroup
+                                        value={answers[question.id] ?? ''}
+                                        onValueChange={(value) => setAnswer(question.id, value)}
+                                        className="flex flex-wrap gap-4"
+                                    >
+                                        {question.options.map((option) => (
+                                            <div key={option.id} className="flex items-center gap-2">
+                                                <RadioGroupItem
+                                                    value={String(option.id)}
+                                                    id={`q${question.id}_o${option.id}`}
+                                                />
+                                                <Label htmlFor={`q${question.id}_o${option.id}`}>
+                                                    {option.libelle}
+                                                </Label>
+                                            </div>
+                                        ))}
+                                    </RadioGroup>
+                                </div>
+                            ))}
+                        </CollapsibleContent>
+                    </Collapsible>
                 </section>
             ))}
 
@@ -160,7 +180,12 @@ export default function ChiffrageTab({ devisId, scenario, reponses, visibleQuest
                     <ul className="flex flex-col gap-2">
                         {mainOeuvres.map((mo) => (
                             <li key={mo.id} className="grid grid-cols-[1fr_auto_auto] items-start gap-x-4 text-sm">
-                                <span className="text-muted-foreground">{mo.libelle}</span>
+                                <div>
+                                    <span className="text-muted-foreground">{mo.libelle}</span>
+                                    {mo.description && (
+                                        <p className="text-muted-foreground/70 text-xs">{mo.description}</p>
+                                    )}
+                                </div>
                                 <span className="text-foreground">{mo.nombre_heures_chantier}h chantier</span>
                                 <span className="text-foreground">{mo.nombre_heures_mini_pelle}h mini-pelle</span>
                             </li>
@@ -180,6 +205,7 @@ export default function ChiffrageTab({ devisId, scenario, reponses, visibleQuest
             devisId={devisId}
             open={mainOeuvreDialogOpen}
             onClose={() => setMainOeuvreDialogOpen(false)}
+            tauxHoraires={tauxHoraires}
         />
     </div>
 );

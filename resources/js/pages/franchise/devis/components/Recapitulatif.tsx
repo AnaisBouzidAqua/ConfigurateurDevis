@@ -8,7 +8,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Ligne {
-    produit_ref: string;
+    cle: string;
+    produit_ref: string | null;
     quantite: number;
     nom: string;
     prix: number | null;
@@ -17,6 +18,7 @@ interface Ligne {
 interface MainOeuvre {
     id: number;
     libelle: string;
+    description: string | null;
     nombre_heures_chantier: number;
     nombre_heures_mini_pelle: number;
     cout: number;
@@ -50,6 +52,7 @@ export default function Recapitulatif({
     const [coefficient, setCoefficient] = useState(String(coefficientDifficulte));
     const [remise, setRemise] = useState(remiseValeur !== null ? String(remiseValeur) : '0');
     const [typeRemise, setTypeRemise] = useState<'montant' | 'pourcentage'>(remiseType ?? 'montant');
+    const [coefficientError, setCoefficientError] = useState<string | null>(null);
 
     function saveTarification(changes: {
         coefficient_difficulte?: string;
@@ -63,7 +66,12 @@ export default function Recapitulatif({
                 remise_valeur: changes.remise_valeur ?? remise,
                 remise_type: changes.remise_type ?? typeRemise,
             },
-            { preserveState: true, preserveScroll: true },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onError: (errors) => setCoefficientError(errors.coefficient_difficulte ?? null),
+                onSuccess: () => setCoefficientError(null),
+            },
         );
     }
 
@@ -83,14 +91,15 @@ export default function Recapitulatif({
                 <ul className="mt-3 mb-4 flex flex-col gap-4">
                     {lignes.map((ligne) => (
                         <li
-                            key={ligne.produit_ref}
-                            className="grid grid-cols-[auto_1fr_auto] items-start gap-x-2 text-sm"
+                            key={ligne.cle}
+                            className="grid grid-cols-[auto_1fr_auto_auto] items-start gap-x-2 text-sm"
                         >
                             <span className="text-muted-foreground">×{ligne.quantite}</span>
                             <span className="text-muted-foreground">{ligne.nom}</span>
-                            <span className="text-foreground">
+                            <span className="text-foreground w-20 text-right">
                                 {ligne.prix !== null ? `${(ligne.quantite * ligne.prix).toFixed(2)} €` : '—'}
                             </span>
+                            <span className="size-4" aria-hidden="true" />
                         </li>
                     ))}
                 </ul>
@@ -100,8 +109,17 @@ export default function Recapitulatif({
                 <ul className="mb-4 flex flex-col gap-2">
                     {mainOeuvres.map((mo) => (
                         <li key={mo.id} className="grid grid-cols-[1fr_auto_auto] items-start gap-x-2 text-sm">
-                            <span className="text-muted-foreground">{mo.libelle}</span>
-                            <span className="text-foreground">{mo.cout.toFixed(2)} €</span>
+                            {mo.description ? (
+                                <Tooltip>
+                                    <TooltipTrigger type="button" className="text-muted-foreground text-left">
+                                        {mo.libelle}
+                                    </TooltipTrigger>
+                                    <TooltipContent>{mo.description}</TooltipContent>
+                                </Tooltip>
+                            ) : (
+                                <span className="text-muted-foreground">{mo.libelle}</span>
+                            )}
+                            <span className="text-foreground w-20 text-right">{mo.cout.toFixed(2)} €</span>
                             <button
                                 type="button"
                                 onClick={() => router.delete(`/devis/${devisId}/main-oeuvre/${mo.id}`)}
@@ -124,28 +142,30 @@ export default function Recapitulatif({
                         <Label htmlFor="coefficient_difficulte" className="text-muted-foreground">
                             Coefficient de difficulté
                         </Label>
+                        <span className="text-muted-foreground text-xs">%</span>
                         <Tooltip>
                             <TooltipTrigger type="button">
                                 <Info className="text-muted-foreground size-3.5" />
                             </TooltipTrigger>
-                            <TooltipContent>Applique une hausse tarifaire au total</TooltipContent>
+                            <TooltipContent>Applique une hausse tarifaire au total, en pourcentage</TooltipContent>
                         </Tooltip>
                     </div>
                     <Input
                         id="coefficient_difficulte"
                         type="number"
-                        step="0.01"
+                        step="1"
                         min={0}
                         value={coefficient}
-                        onChange={(e) => setCoefficient(e.target.value)}
+                        onChange={(e) => setCoefficient(e.target.value.replace(/[^0-9]/g, ''))}
                         onBlur={() => saveTarification({ coefficient_difficulte: coefficient })}
                     />
+                    {coefficientError && <p className="text-sm text-red-600">{coefficientError}</p>}
                 </div>
 
                 <div className="grid gap-1.5">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="remise_valeur" className="text-muted-foreground">
-                            Remise commercial
+                            Remise commerciale
                         </Label>
                         <RadioGroup
                             value={typeRemise}

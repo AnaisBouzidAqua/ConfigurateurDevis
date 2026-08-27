@@ -32,7 +32,7 @@ export default function Parametres({ parametre }: Props) {
 
                 <div className="grid max-w-md grid-cols-2 gap-4">
                     <div className="grid gap-1.5">
-                        <Label htmlFor="taux_horaire_chantier">Taux horaires chantier (€)</Label>
+                        <Label htmlFor="taux_horaire_chantier">Taux horaire chantier (€)</Label>
                         <Input
                             id="taux_horaire_chantier"
                             type="number"
@@ -48,7 +48,7 @@ export default function Parametres({ parametre }: Props) {
                     </div>
 
                     <div className="grid gap-1.5">
-                        <Label htmlFor="taux_horaire_mini_pelle">Taux horaires mini-pelle (€)</Label>
+                        <Label htmlFor="taux_horaire_mini_pelle">Taux horaire mini-pelle (€)</Label>
                         <Input
                             id="taux_horaire_mini_pelle"
                             type="number"
