@@ -9,17 +9,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 interface Props {
     dateDebut: string | null;
     dateFin: string | null;
-    recherche: string | null;
-    parPage: number;
-    tri: string;
-    direction: 'asc' | 'desc';
+    extraParams: Record<string, string | number>;
 }
 
 function versRange(dateDebut: string | null, dateFin: string | null): DateRange | undefined {
     return dateDebut ? { from: new Date(dateDebut), to: dateFin ? new Date(dateFin) : undefined } : undefined;
 }
 
-export function FiltreDates({ dateDebut, dateFin, recherche, parPage, tri, direction }: Props) {
+export function FiltreDates({ dateDebut, dateFin, extraParams }: Props) {
     const [open, setOpen] = useState(false);
     const [selection, setSelection] = useState<DateRange | undefined>(versRange(dateDebut, dateFin));
 
@@ -37,10 +34,7 @@ export function FiltreDates({ dateDebut, dateFin, recherche, parPage, tri, direc
         router.get(
             '/devis',
             {
-                recherche: recherche ?? '',
-                par_page: parPage,
-                tri,
-                direction,
+                ...extraParams,
                 date_debut: format(nouvelleSelection.from, 'yyyy-MM-dd'),
                 date_fin: format(nouvelleSelection.to, 'yyyy-MM-dd'),
             },

@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { Archive, ArrowDown, ArrowUp, FileSpreadsheet, FileText, MoreVertical, Search } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, ChevronDown, FileText, MoreVertical, Search } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import {
     DropdownMenu,
@@ -15,15 +15,59 @@ interface Devis {
     id: number;
     client_nom: string | null;
     dispositif: string | null;
-    type_realisation: string | null;
+    capacite_eh: number | null;
+    installateur: string | null;
+    type_installateur: string | null;
+    total_ht: number | null;
     created_at: string;
 }
+
+const LABELS_INSTALLATEUR: Record<string, string> = {
+    vente_kit: 'Vente de kit',
+    chantier_cle_en_main: 'Chantier clé en main',
+};
+
+const LABELS_TYPE_INSTALLATEUR: Record<string, string> = {
+    autoconstructeur: 'Autoconstructeur',
+    installateur_agree: 'Installateur agréé',
+    installateur_non_agree: 'Installateur non agréé',
+};
 
 interface Paginated<T> {
     data: T[];
     links: { url: string | null; label: string; active: boolean }[];
     current_page: number;
     last_page: number;
+}
+
+function SelectFiltre({
+    value,
+    onChange,
+    options,
+    placeholder,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+    options: { value: string; label: string }[];
+    placeholder: string;
+}) {
+    return (
+        <div className="relative">
+            <select
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="text-foreground h-10 appearance-none rounded-lg border bg-background py-2 pr-9 pl-3 text-sm leading-[120%] font-medium"
+            >
+                <option value="">{placeholder}</option>
+                {options.map((option) => (
+                    <option key={option.value} value={option.value}>
+                        {option.label}
+                    </option>
+                ))}
+            </select>
+            <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2" />
+        </div>
+    );
 }
 
 interface Props {
@@ -34,14 +78,50 @@ interface Props {
     direction: 'asc' | 'desc';
     dateDebut: string | null;
     dateFin: string | null;
+    dispositif: string | null;
+    installateur: string | null;
+    typeInstallateur: string | null;
+    dispositifsDisponibles: string[];
 }
 
-export default function Index({ devis, recherche, parPage, tri, direction, dateDebut, dateFin }: Props) {
-    const { data, setData, get } = useForm({ recherche: recherche ?? '' });
+export default function Index({
+    devis,
+    recherche,
+    parPage,
+    tri,
+    direction,
+    dateDebut,
+    dateFin,
+    dispositif,
+    installateur,
+    typeInstallateur,
+    dispositifsDisponibles,
+}: Props) {
+    const { data, setData } = useForm({ recherche: recherche ?? '' });
+
+    const filtresActuels = {
+        recherche: recherche ?? '',
+        par_page: parPage,
+        tri,
+        direction,
+        date_debut: dateDebut ?? '',
+        date_fin: dateFin ?? '',
+        dispositif: dispositif ?? '',
+        installateur: installateur ?? '',
+        type_installateur: typeInstallateur ?? '',
+    };
 
     function handleSearch(e: React.FormEvent) {
         e.preventDefault();
-        get('/devis', { preserveState: true });
+        router.get(
+            '/devis',
+            { ...filtresActuels, recherche: data.recherche },
+            { preserveState: true, preserveScroll: true },
+        );
+    }
+
+    function filtrerPar(champ: 'dispositif' | 'installateur' | 'type_installateur', valeur: string) {
+        router.get('/devis', { ...filtresActuels, [champ]: valeur }, { preserveState: true, preserveScroll: true });
     }
 
     function archiver(id: number) {
@@ -51,8 +131,11 @@ export default function Index({ devis, recherche, parPage, tri, direction, dateD
     const colonnes: { key: string; label: string }[] = [
         { key: 'client_nom', label: 'Client' },
         { key: 'dispositif', label: 'Dispositif' },
-        { key: 'type_realisation', label: 'Construction' },
-        { key: 'created_at', label: 'Date du chiffrage' },
+        { key: 'capacite_eh', label: "Nombre d'EH" },
+        { key: 'installateur', label: 'Construction' },
+        { key: 'type_installateur', label: "Type d'installateur" },
+        { key: 'total_ht', label: 'Total HT' },
+        { key: 'created_at', label: 'Date de chiffrage' },
     ];
 
     function trier(colonne: string) {
@@ -60,7 +143,7 @@ export default function Index({ devis, recherche, parPage, tri, direction, dateD
 
         router.get(
             '/devis',
-            { recherche: recherche ?? '', par_page: parPage, tri: colonne, direction: nouvelleDirection },
+            { ...filtresActuels, tri: colonne, direction: nouvelleDirection },
             { preserveState: true, preserveScroll: true },
         );
     }
@@ -72,15 +155,33 @@ export default function Index({ devis, recherche, parPage, tri, direction, dateD
             <div className="flex flex-col gap-4 pt-8 pb-4 pr-6 pl-[52px] md:pr-4 md:pl-[44px]">
                 <div className="bg-card rounded-xl p-4">
                     <form onSubmit={handleSearch} className="bg-background flex h-10 items-center justify-between rounded-lg">
-
-                        <FiltreDates
-                            dateDebut={dateDebut}
-                            dateFin={dateFin}
-                            recherche={recherche}
-                            parPage={parPage}
-                            tri={tri}
-                            direction={direction}
-                        />
+                        <div className="flex items-center gap-3">
+                            <FiltreDates dateDebut={dateDebut} dateFin={dateFin} extraParams={filtresActuels} />
+                            <SelectFiltre
+                                value={dispositif ?? ''}
+                                onChange={(valeur) => filtrerPar('dispositif', valeur)}
+                                options={dispositifsDisponibles.map((valeur) => ({ value: valeur, label: valeur }))}
+                                placeholder="Dispositif"
+                            />
+                            <SelectFiltre
+                                value={installateur ?? ''}
+                                onChange={(valeur) => filtrerPar('installateur', valeur)}
+                                options={Object.entries(LABELS_INSTALLATEUR).map(([value, label]) => ({
+                                    value,
+                                    label,
+                                }))}
+                                placeholder="Construction"
+                            />
+                            <SelectFiltre
+                                value={typeInstallateur ?? ''}
+                                onChange={(valeur) => filtrerPar('type_installateur', valeur)}
+                                options={Object.entries(LABELS_TYPE_INSTALLATEUR).map(([value, label]) => ({
+                                    value,
+                                    label,
+                                }))}
+                                placeholder="Type d'installateur"
+                            />
+                        </div>
                         <div className="relative w-64">
                             <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                             <Input
@@ -115,13 +216,9 @@ export default function Index({ devis, recherche, parPage, tri, direction, dateD
 
                                 <th className="w-10 px-2 py-3 text-right">
                                     <a
-                                        href={`/devis/export?${new URLSearchParams({
-                                            recherche: recherche ?? '',
-                                            tri,
-                                            direction,
-                                            date_debut: dateDebut ?? '',
-                                            date_fin: dateFin ?? '',
-                                        }).toString()}`}
+                                        href={`/devis/export?${new URLSearchParams(
+                                            filtresActuels as unknown as Record<string, string>,
+                                        ).toString()}`}
                                         className="inline-flex"
                                         title="Exporter en Excel"
                                     >
@@ -141,7 +238,18 @@ export default function Index({ devis, recherche, parPage, tri, direction, dateD
                                         {row.client_nom ?? '—'}
                                     </td>
                                     <td className="text-muted-foreground px-4 py-4">{row.dispositif ?? '—'}</td>
-                                    <td className="text-muted-foreground px-4 py-4">{row.type_realisation ?? '—'}</td>
+                                    <td className="text-muted-foreground px-4 py-4">{row.capacite_eh ?? '—'}</td>
+                                    <td className="text-muted-foreground px-4 py-4">
+                                        {row.installateur ? (LABELS_INSTALLATEUR[row.installateur] ?? '—') : '—'}
+                                    </td>
+                                    <td className="text-muted-foreground px-4 py-4">
+                                        {row.installateur === 'chantier_cle_en_main' || !row.type_installateur
+                                            ? '—'
+                                            : (LABELS_TYPE_INSTALLATEUR[row.type_installateur] ?? '—')}
+                                    </td>
+                                    <td className="text-muted-foreground px-4 py-4">
+                                        {row.total_ht !== null ? `${Number(row.total_ht).toFixed(2)} €` : '—'}
+                                    </td>
                                     <td className="text-muted-foreground px-4 py-4">
                                         {new Date(row.created_at).toLocaleDateString('fr-FR')}
                                     </td>
@@ -183,18 +291,7 @@ export default function Index({ devis, recherche, parPage, tri, direction, dateD
                     />
                 )}
 
-                <Pagination
-                    links={devis.links}
-                    parPage={parPage}
-                    baseUrl="/devis"
-                    extraParams={{
-                        recherche: recherche ?? '',
-                        tri,
-                        direction,
-                        date_debut: dateDebut ?? '',
-                        date_fin: dateFin ?? '',
-                    }}
-                />
+                <Pagination links={devis.links} parPage={parPage} baseUrl="/devis" extraParams={filtresActuels} />
 
 
             </div>
