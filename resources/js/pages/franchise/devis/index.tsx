@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { Archive, ArrowDown, ArrowUp, ChevronDown, FileText, MoreVertical, Search } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, FileText, MoreVertical, Search } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import {
     DropdownMenu,
@@ -8,8 +8,10 @@ import {
     DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FiltreDates } from './components/FiltreDates';
 import { Pagination } from './components/Pagination';
+import { LABELS_INSTALLATEUR, LABELS_TYPE_INSTALLATEUR } from './constants';
 
 interface Devis {
     id: number;
@@ -22,23 +24,17 @@ interface Devis {
     created_at: string;
 }
 
-const LABELS_INSTALLATEUR: Record<string, string> = {
-    vente_kit: 'Vente de kit',
-    chantier_cle_en_main: 'Chantier clé en main',
-};
-
-const LABELS_TYPE_INSTALLATEUR: Record<string, string> = {
-    autoconstructeur: 'Autoconstructeur',
-    installateur_agree: 'Installateur agréé',
-    installateur_non_agree: 'Installateur non agréé',
-};
-
 interface Paginated<T> {
     data: T[];
     links: { url: string | null; label: string; active: boolean }[];
     current_page: number;
     last_page: number;
 }
+
+// Radix Select n'autorise pas une SelectItem avec value="" (reservee en interne
+// pour "aucune valeur") : on utilise ce sentinel pour l'option "reinitialiser le
+// filtre", et on le traduit en '' au niveau du contrat onChange(value: string).
+const FILTRE_VIDE = '__vide__';
 
 function SelectFiltre({
     value,
@@ -52,21 +48,22 @@ function SelectFiltre({
     placeholder: string;
 }) {
     return (
-        <div className="relative">
-            <select
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="text-foreground h-10 appearance-none rounded-lg border bg-background py-2 pr-9 pl-3 text-sm leading-[120%] font-medium"
-            >
-                <option value="">{placeholder}</option>
+        <Select
+            value={value === '' ? FILTRE_VIDE : value}
+            onValueChange={(valeur) => onChange(valeur === FILTRE_VIDE ? '' : valeur)}
+        >
+            <SelectTrigger size="sm" className="h-10 rounded-lg">
+                <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value={FILTRE_VIDE}>{placeholder}</SelectItem>
                 {options.map((option) => (
-                    <option key={option.value} value={option.value}>
+                    <SelectItem key={option.value} value={option.value}>
                         {option.label}
-                    </option>
+                    </SelectItem>
                 ))}
-            </select>
-            <ChevronDown className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2" />
-        </div>
+            </SelectContent>
+        </Select>
     );
 }
 

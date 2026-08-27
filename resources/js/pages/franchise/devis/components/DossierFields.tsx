@@ -2,6 +2,7 @@ import { SectionTitle } from '@/components/section-title';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { LABELS_INSTALLATEUR, LABELS_TYPE_INSTALLATEUR } from '../constants';
 
 export interface DossierData {
     client_nom: string;
@@ -112,14 +113,12 @@ export default function DossierFields({ data, onChange, disabled = false, errors
                         className="flex gap-4"
                         disabled={disabled}
                     >
-                        <div className="flex items-center gap-2">
-                            <RadioGroupItem value="vente_kit" id="installateur_vente_kit" />
-                            <Label htmlFor="installateur_vente_kit">Vente de kit</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <RadioGroupItem value="chantier_cle_en_main" id="installateur_cle_en_main" />
-                            <Label htmlFor="installateur_cle_en_main">Chantier clé en main</Label>
-                        </div>
+                        {Object.entries(LABELS_INSTALLATEUR).map(([value, label]) => (
+                            <div key={value} className="flex items-center gap-2">
+                                <RadioGroupItem value={value} id={`installateur_${value}`} />
+                                <Label htmlFor={`installateur_${value}`}>{label}</Label>
+                            </div>
+                        ))}
                     </RadioGroup>
                 </div>
 
@@ -132,18 +131,12 @@ export default function DossierFields({ data, onChange, disabled = false, errors
                             className="flex gap-4"
                             disabled={disabled}
                         >
-                            <div className="flex items-center gap-2">
-                                <RadioGroupItem value="autoconstructeur" id="type_installateur_auto" />
-                                <Label htmlFor="type_installateur_auto">Autoconstructeur</Label>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <RadioGroupItem value="installateur_agree" id="type_installateur_agree" />
-                                <Label htmlFor="type_installateur_agree">Installateur agréé</Label>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <RadioGroupItem value="installateur_non_agree" id="type_installateur_non_agree" />
-                                <Label htmlFor="type_installateur_non_agree">Installateur non agréé</Label>
-                            </div>
+                            {Object.entries(LABELS_TYPE_INSTALLATEUR).map(([value, label]) => (
+                                <div key={value} className="flex items-center gap-2">
+                                    <RadioGroupItem value={value} id={`type_installateur_${value}`} />
+                                    <Label htmlFor={`type_installateur_${value}`}>{label}</Label>
+                                </div>
+                            ))}
                         </RadioGroup>
                     </div>
                 )}

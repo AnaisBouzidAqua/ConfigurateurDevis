@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-interface TauxHoraires {
+export interface TauxHoraires {
     chantier: number;
     mini_pelle: number;
 }

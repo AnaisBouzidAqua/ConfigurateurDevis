@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AjouterMainOeuvreDialog } from './AjouterMainOeuvreDialog';
+import type { TauxHoraires } from './AjouterMainOeuvreDialog';
 
 
 interface QuestionOption {
@@ -48,11 +49,6 @@ interface MainOeuvre {
     nombre_heures_chantier: number;
     nombre_heures_mini_pelle: number;
     cout: number;
-}
-
-interface TauxHoraires {
-    chantier: number;
-    mini_pelle: number;
 }
 
 interface Props {

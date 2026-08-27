@@ -1,14 +1,14 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { X } from 'lucide-react';
 import { useCurrentUrl } from '@/hooks/use-current-url';
+import { useIsFranchise } from '@/hooks/use-is-franchise';
 import { useTabs } from '@/hooks/use-tabs';
 import { cn } from '@/lib/utils';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 
 export function TabBar({ breadcrumbs }: { breadcrumbs: BreadcrumbItemType[] }) {
-    const { url } = usePage();
     const { isCurrentUrl } = useCurrentUrl();
-    const isFranchise = url.startsWith('/devis') || url.startsWith('/parametres');
+    const isFranchise = useIsFranchise();
     const homeHref = isFranchise ? '/devis/create' : '/admin/scenarios';
 
     const dernier = breadcrumbs[breadcrumbs.length - 1];

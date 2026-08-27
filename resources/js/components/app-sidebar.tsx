@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import {Euro, Folder, Settings} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -13,6 +13,7 @@ import {
     SidebarMenuItem,
     SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { useIsFranchise } from '@/hooks/use-is-franchise';
 import type { NavItem } from '@/types';
 
 const adminNavItems: NavItem[] = [
@@ -30,8 +31,7 @@ const franchiseNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    const { url } = usePage();
-    const isFranchise = url.startsWith('/devis') || url.startsWith('/parametres');
+    const isFranchise = useIsFranchise();
     const mainNavItems = isFranchise ? franchiseNavItems : adminNavItems;
     const homeHref = isFranchise ? '/devis/create' : '/admin/scenarios';
 

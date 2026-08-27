@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { TauxHoraires } from './components/AjouterMainOeuvreDialog';
 import ChiffrageTab from './components/ChiffrageTab';
 import DossierFields from './components/DossierFields';
 import Recapitulatif from './components/Recapitulatif';
@@ -78,11 +79,6 @@ interface Totaux {
     total_ht: number;
     total_tva: number;
     total_ttc: number;
-}
-
-interface TauxHoraires {
-    chantier: number;
-    mini_pelle: number;
 }
 
 interface Props {

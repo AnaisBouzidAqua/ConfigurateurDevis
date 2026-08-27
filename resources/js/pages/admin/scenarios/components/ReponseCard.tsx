@@ -243,8 +243,8 @@ export function ReponseCard({
                             </Tooltip>
                         </div>
 
-                        {modeAjout === 'catalogue' ? (
-                            <div className="flex items-end gap-2">
+                        <div className="flex items-end gap-2">
+                            {modeAjout === 'catalogue' ? (
                                 <div className="grid min-w-0 flex-1 gap-1">
                                     <Label htmlFor={`${prefix}_produit_ref`} className="text-xs">
                                         Référence produit <RequiredMark />
@@ -263,74 +263,58 @@ export function ReponseCard({
                                         ))}
                                     </select>
                                 </div>
+                            ) : (
+                                <>
+                                    <div className="grid min-w-0 flex-1 gap-1">
+                                        <Label htmlFor={`${prefix}_libelle_libre`} className="text-xs">
+                                            Libellé <RequiredMark />
+                                        </Label>
+                                        <Input
+                                            id={`${prefix}_libelle_libre`}
+                                            value={libelleLibre}
+                                            onChange={(e) => setLibelleLibre(e.target.value)}
+                                            placeholder="Ex : Prestation d'étude"
+                                        />
+                                    </div>
 
-                                <div className="grid w-20 shrink-0 gap-1">
-                                    <Label htmlFor={`${prefix}_quantite`} className="text-xs">
-                                        Qté
-                                    </Label>
-                                    <Input
-                                        id={`${prefix}_quantite`}
-                                        type="number"
-                                        min={1}
-                                        value={quantite}
-                                        onChange={(e) => setQuantite(Number(e.target.value))}
-                                    />
-                                </div>
-                                <Button type="button" variant="outline" disabled={!produitRef.trim()} onClick={addProduitCatalogue}>
-                                    Ajouter
-                                </Button>
+                                    <div className="grid w-24 shrink-0 gap-1">
+                                        <Label htmlFor={`${prefix}_prix_libre`} className="text-xs">
+                                            Montant (€) <RequiredMark />
+                                        </Label>
+                                        <Input
+                                            id={`${prefix}_prix_libre`}
+                                            type="number"
+                                            min={0}
+                                            step="0.01"
+                                            placeholder="0,00"
+                                            value={prixLibre}
+                                            onChange={(e) => setPrixLibre(e.target.value)}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            <div className="grid w-20 shrink-0 gap-1">
+                                <Label htmlFor={`${prefix}_quantite`} className="text-xs">
+                                    Qté
+                                </Label>
+                                <Input
+                                    id={`${prefix}_quantite`}
+                                    type="number"
+                                    min={1}
+                                    value={quantite}
+                                    onChange={(e) => setQuantite(Number(e.target.value))}
+                                />
                             </div>
-                        ) : (
-                            <div className="flex items-end gap-2">
-                                <div className="grid min-w-0 flex-1 gap-1">
-                                    <Label htmlFor={`${prefix}_libelle_libre`} className="text-xs">
-                                        Libellé <RequiredMark />
-                                    </Label>
-                                    <Input
-                                        id={`${prefix}_libelle_libre`}
-                                        value={libelleLibre}
-                                        onChange={(e) => setLibelleLibre(e.target.value)}
-                                        placeholder="Ex : Prestation d'étude"
-                                    />
-                                </div>
-
-                                <div className="grid w-24 shrink-0 gap-1">
-                                    <Label htmlFor={`${prefix}_prix_libre`} className="text-xs">
-                                        Montant (€) <RequiredMark />
-                                    </Label>
-                                    <Input
-                                        id={`${prefix}_prix_libre`}
-                                        type="number"
-                                        min={0}
-                                        step="0.01"
-                                        placeholder="0,00"
-                                        value={prixLibre}
-                                        onChange={(e) => setPrixLibre(e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="grid w-20 shrink-0 gap-1">
-                                    <Label htmlFor={`${prefix}_quantite_libre`} className="text-xs">
-                                        Qté
-                                    </Label>
-                                    <Input
-                                        id={`${prefix}_quantite_libre`}
-                                        type="number"
-                                        min={1}
-                                        value={quantite}
-                                        onChange={(e) => setQuantite(Number(e.target.value))}
-                                    />
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={!libelleLibreValide || !prixLibreValide}
-                                    onClick={addProduitLibre}
-                                >
-                                    Ajouter
-                                </Button>
-                            </div>
-                        )}
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={modeAjout === 'catalogue' ? !produitRef.trim() : !libelleLibreValide || !prixLibreValide}
+                                onClick={modeAjout === 'catalogue' ? addProduitCatalogue : addProduitLibre}
+                            >
+                                Ajouter
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
