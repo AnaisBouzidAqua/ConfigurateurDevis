@@ -60,6 +60,7 @@ export interface Produit {
     ref: string;
     nom: string;
     prix: number;
+    a_des_declinaisons: boolean;
 }
 
 interface Props {

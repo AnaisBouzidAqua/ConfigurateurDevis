@@ -246,10 +246,30 @@ class DevisController extends Controller
             $lignes = $moteur->resoudre($devis->scenario, $reponses);
             $visibleQuestionIds = $moteur->questionsAccessibles($devis->scenario, $reponses)->pluck('id');
 
-            $refs = $lignes->pluck('produit_ref')->filter();
-            $produits = Produit::whereIn('ref', $refs)->get()->keyBy('ref');
+            // Si la reference associee a la reponse est une declinaison EH
+            // (ex: BFV5EH configure sur le scenario, cf. Produit::skuBaseDeclinaison),
+            // on cherche celle qui correspond a la capacite EH reelle du dossier
+            // (ex: BFV10EH si capacite_eh = 10) plutot que de garder la taille
+            // configuree telle quelle.
+            $refEffective = function (?string $ref) use ($devis) {
+                if ($ref === null || $devis->capacite_eh === null) {
+                    return $ref;
+                }
 
-            $resolution = $lignes->map(function (array $ligne) use ($produits) {
+                $base = Produit::skuBaseDeclinaison($ref);
+
+                return $base !== null ? $base.$devis->capacite_eh.'EH' : $ref;
+            };
+
+            $refsOriginales = $lignes->pluck('produit_ref')->filter();
+            $refsSouhaitees = $refsOriginales->map($refEffective);
+            // On recupere aussi les references d'origine : si la declinaison
+            // ciblee n'existe pas dans le catalogue, on retombe dessus plutot
+            // que de n'afficher aucun produit.
+            $produits = Produit::whereIn('ref', $refsOriginales->merge($refsSouhaitees)->unique())
+                ->get()->keyBy('ref');
+
+            $resolution = $lignes->map(function (array $ligne) use ($produits, $refEffective) {
                 // Un produit libre porte son propre nom/prix, saisis directement
                 // sur la réponse — pas de recherche dans le catalogue.
                 if ($ligne['produit_ref'] === null) {
@@ -262,13 +282,30 @@ class DevisController extends Controller
                     ];
                 }
 
-                $produit = $produits->get($ligne['produit_ref']);
+                $refResolue = $refEffective($ligne['produit_ref']);
+                $produit = $produits->get($refResolue);
+
+                if (! $produit && $refResolue !== $ligne['produit_ref']) {
+                    $refResolue = $ligne['produit_ref'];
+                    $produit = $produits->get($refResolue);
+                }
+
+                $nom = $produit->nom ?? $refResolue;
+                $ehResolue = Produit::valeurEhDeclinaison($refResolue);
+
+                // Toutes les declinaisons d'une meme famille partagent le meme
+                // nom chez AquaConnect (ex: "KIT BAC PEHD" quelle que soit la
+                // taille) : on precise la taille retenue pour que ce soit lisible.
+                if ($produit && $ehResolue !== null) {
+                    $ehTexte = fmod($ehResolue, 1.0) === 0.0 ? (string) (int) $ehResolue : (string) $ehResolue;
+                    $nom .= " ({$ehTexte} EH)";
+                }
 
                 return [
                     'cle' => $ligne['cle'],
-                    'produit_ref' => $ligne['produit_ref'],
+                    'produit_ref' => $refResolue,
                     'quantite' => $ligne['quantite'],
-                    'nom' => $produit->nom ?? $ligne['produit_ref'],
+                    'nom' => $nom,
                     'prix' => $produit->prix ?? null,
                 ];
             })->values();

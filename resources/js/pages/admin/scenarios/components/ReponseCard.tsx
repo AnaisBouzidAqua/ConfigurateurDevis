@@ -36,6 +36,13 @@ interface ReponseCardProps {
     canRemove: boolean;
 }
 
+// Un produit avec des déclinaisons EH n'affiche que son nom : sa référence
+// n'est qu'un représentant de la famille, l'afficher laisserait croire à
+// l'admin qu'il associe précisément cette taille-là.
+function libelleProduit(produit: Produit): string {
+    return produit.a_des_declinaisons ? produit.nom : `${produit.nom} (${produit.ref})`;
+}
+
 // Un sous-composant par réponse, plutôt qu'un seul bloc dans le formulaire parent,
 // pour que chaque réponse ait son propre état local (produitRef/quantite) sans
 // avoir à synchroniser un tableau parallèle à questionForm.data.reponses.
@@ -274,9 +281,7 @@ export function ReponseCard({
                                                 )}
                                             >
                                                 <span className="min-w-0 truncate">
-                                                    {produitSelectionne
-                                                        ? `${produitSelectionne.nom} (${produitSelectionne.ref})`
-                                                        : 'Choisir un produit'}
+                                                    {produitSelectionne ? libelleProduit(produitSelectionne) : 'Choisir un produit'}
                                                 </span>
                                                 <ChevronsUpDown className="text-muted-foreground size-4 shrink-0" />
                                             </Button>
@@ -302,7 +307,7 @@ export function ReponseCard({
                                                                     <Check
                                                                         className={cn('size-4', estSelectionne ? 'opacity-100' : 'opacity-0')}
                                                                     />
-                                                                    {produit.nom} ({produit.ref})
+                                                                    {libelleProduit(produit)}
                                                                 </CommandItem>
                                                             );
                                                         })}

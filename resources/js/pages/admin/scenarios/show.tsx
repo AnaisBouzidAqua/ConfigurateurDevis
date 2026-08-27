@@ -15,20 +15,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import RubriquesSection from './components/RubriquesSection';
-import type { Question, Rubrique } from './components/RubriquesSection';
+import type { Produit, Question, Rubrique } from './components/RubriquesSection';
 
 interface Scenario {
     id: number;
     nom: string;
     famille: string;
     rubriques: Rubrique[];
-}
-
-interface Produit {
-    id: number;
-    ref: string;
-    nom: string;
-    prix: number;
 }
 
 interface Props {

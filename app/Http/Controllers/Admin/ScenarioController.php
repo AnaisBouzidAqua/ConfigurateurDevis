@@ -42,7 +42,7 @@ class ScenarioController extends Controller
         return inertia('admin/scenarios/show', [
             'scenario' => $scenario,
             'questions' => Question::with('options.produits')->get(),
-            'produits' => Produit::orderBy('nom')->get(),
+            'produits' => Produit::pourSelectionAdmin(),
         ]);
     }
 
