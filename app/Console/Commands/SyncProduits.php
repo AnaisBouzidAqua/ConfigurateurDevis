@@ -29,16 +29,39 @@ class SyncProduits extends Command
             return self::FAILURE;
         }
 
-        $lignes = $response->json('table');
+        // Certaines references existent en double dans le catalogue (ex: un
+        // produit isole ET une variante EH partagent la meme reference, avec
+        // des prix differents) : seule la ligne on_sale=1 est la bonne, l'autre
+        // est une ancienne fiche desactivee.
+        $lignes = collect($response->json('table'))
+            ->filter(fn (array $ligne) => in_array($ligne['on_sale'] ?? null, ['1', 1], true))
+            // Une reference vide n'est pas exploitable pour associer un produit
+            // a une question, quel que soit le produit derriere (pas la meme
+            // chose qu'une reference dupliquee, voir plus bas).
+            ->filter(fn (array $ligne) => trim($ligne['reference'] ?? '') !== '');
 
-        foreach ($lignes as $ligne) {
+        // Meme apres ces filtres, certaines references (non vides, cette
+        // fois) restent utilisees par deux produits differents a la fois
+        // (ex: PPCR3EH) : des fiches encore en cours de creation cote
+        // AquaConnect. On les ignore tant qu'elles n'ont pas ete finalisees,
+        // plutot que d'en choisir une au hasard.
+        $occurrencesParRef = $lignes->countBy('reference');
+        $lignesRetenues = $lignes->filter(fn (array $ligne) => $occurrencesParRef[$ligne['reference']] === 1)->values();
+
+        foreach ($lignesRetenues as $ligne) {
             Produit::updateOrCreate(
                 ['ref' => $ligne['reference']],
                 ['nom' => $ligne['name'], 'prix' => $ligne['price']],
             );
         }
 
-        $this->info(count($lignes).' produits synchronises.');
+        $ignorees = $lignes->count() - $lignesRetenues->count();
+
+        $this->info($lignesRetenues->count().' produits synchronises.');
+
+        if ($ignorees > 0) {
+            $this->warn($ignorees.' lignes ignorees (reference dupliquee sans distinction possible).');
+        }
 
         return self::SUCCESS;
     }
