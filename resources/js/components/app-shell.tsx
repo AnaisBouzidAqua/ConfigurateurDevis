@@ -9,7 +9,9 @@ type Props = {
 };
 
 export function AppShell({ children, variant = 'sidebar' }: Props) {
-    const isOpen = usePage().props.sidebarOpen;
+    const { props, url } = usePage();
+    const isOpen = props.sidebarOpen;
+    const isFranchise = url.startsWith('/devis') || url.startsWith('/parametres');
 
     if (variant === 'header') {
         return (
@@ -17,5 +19,19 @@ export function AppShell({ children, variant = 'sidebar' }: Props) {
         );
     }
 
-    return <SidebarProvider defaultOpen={isOpen}>{children}</SidebarProvider>;
+    return (
+        <SidebarProvider
+            defaultOpen={isOpen}
+            style={
+                !isFranchise
+                    ? ({
+                          '--color-sidebar': 'var(--muted-foreground)',
+                          '--color-sidebar-accent': 'var(--label)',
+                      } as React.CSSProperties)
+                    : undefined
+            }
+        >
+            {children}
+        </SidebarProvider>
+    );
 }

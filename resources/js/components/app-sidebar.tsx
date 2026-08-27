@@ -36,7 +36,18 @@ export function AppSidebar() {
     const homeHref = isFranchise ? '/devis/create' : '/admin/scenarios';
 
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar
+            collapsible="icon"
+            variant="inset"
+            style={
+                !isFranchise
+                    ? ({
+                          '--color-sidebar': 'var(--muted-foreground)',
+                          '--color-sidebar-accent': 'var(--label)',
+                      } as React.CSSProperties)
+                    : undefined
+            }
+        >
             <SidebarHeader className="flex-row items-center justify-between pr-0">
                 <SidebarMenu className="group-data-[collapsible=icon]:hidden">
                     <SidebarMenuItem>
