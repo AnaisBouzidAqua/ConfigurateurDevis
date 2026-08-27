@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ChiffrageTab from './components/ChiffrageTab';
 import DossierFields from './components/DossierFields';
 import Recapitulatif from './components/Recapitulatif';
@@ -56,7 +57,8 @@ interface Devis {
 }
 
 interface Ligne {
-    produit_ref: string;
+    cle: string;
+    produit_ref: string | null;
     quantite: number;
     nom: string;
     prix: number | null;
@@ -65,6 +67,7 @@ interface Ligne {
 interface MainOeuvre {
     id: number;
     libelle: string;
+    description: string | null;
     nombre_heures_chantier: number;
     nombre_heures_mini_pelle: number;
     cout: number;
@@ -77,12 +80,18 @@ interface Totaux {
     total_ttc: number;
 }
 
+interface TauxHoraires {
+    chantier: number;
+    mini_pelle: number;
+}
+
 interface Props {
     devis: Devis;
     resolution: Ligne[];
     visibleQuestionIds: number[];
     mainOeuvres: MainOeuvre[];
     totaux: Totaux;
+    tauxHoraires: TauxHoraires;
 }
 
 function toDossierData(devis: Devis) {
@@ -100,7 +109,7 @@ function toDossierData(devis: Devis) {
     };
 }
 
-export default function Show({ devis, resolution, visibleQuestionIds, mainOeuvres, totaux }: Props) {
+export default function Show({ devis, resolution, visibleQuestionIds, mainOeuvres, totaux, tauxHoraires }: Props) {
     const initialTab = new URLSearchParams(window.location.search).get('tab') === 'chiffrage' ? 'chiffrage' : 'dossier';
     const [tab, setTab] = useState<'dossier' | 'chiffrage'>(initialTab);
     const [dossierData, setDossierData] = useState(toDossierData(devis));
@@ -111,35 +120,51 @@ export default function Show({ devis, resolution, visibleQuestionIds, mainOeuvre
 
             <div className="flex flex-col gap-4 pt-8 pb-4 pr-6 pl-[52px] md:pr-4 md:pl-[44px]">
                 <div className="flex flex-col gap-4">
-                    <div className="flex gap-6 border-b border-border">
-                        <button
-                            type="button"
-                            onClick={() => setTab('dossier')}
-                            className={
-                                tab === 'dossier'
-                                    ? 'border-b-2 border-primary pb-2 text-sm font-medium text-primary'
-                                    : 'pb-2 text-sm text-muted-foreground'
-                            }
-                        >
-                            Dossier
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setTab('chiffrage')}
-                            className={
-                                tab === 'chiffrage'
-                                    ? 'border-b-2 border-primary pb-2 text-sm font-medium text-primary'
-                                    : 'pb-2 text-sm text-muted-foreground'
-                            }
-                        >
-                            Chiffrage
-                        </button>
+                    <div className="flex items-center justify-between border-b border-border">
+                        <div className="flex gap-6">
+                            <button
+                                type="button"
+                                onClick={() => setTab('dossier')}
+                                className={
+                                    tab === 'dossier'
+                                        ? 'border-b-2 border-primary pb-2 text-sm font-medium text-primary'
+                                        : 'pb-2 text-sm text-muted-foreground'
+                                }
+                            >
+                                Dossier
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setTab('chiffrage')}
+                                className={
+                                    tab === 'chiffrage'
+                                        ? 'border-b-2 border-primary pb-2 text-sm font-medium text-primary'
+                                        : 'pb-2 text-sm text-muted-foreground'
+                                }
+                            >
+                                Chiffrage
+                            </button>
+                        </div>
+
+                        {tab === 'chiffrage' && (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="mb-2 inline-block" tabIndex={0}>
+                                        <Button type="button" disabled className="pointer-events-none">
+                                            Importer le chiffrage
+                                        </Button>
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent>Nécessite l'intégration avec AquaConnect</TooltipContent>
+                            </Tooltip>
+                        )}
                     </div>
 
                     {tab === 'dossier' && (
                         <DossierFields
                             data={dossierData}
                             onChange={(field, value) => setDossierData((prev) => ({ ...prev, [field]: value }))}
+                            disabled
                         />
                     )}
 
@@ -152,6 +177,7 @@ export default function Show({ devis, resolution, visibleQuestionIds, mainOeuvre
                                     reponses={devis.reponses}
                                     visibleQuestionIds={visibleQuestionIds}
                                     mainOeuvres={mainOeuvres}
+                                    tauxHoraires={tauxHoraires}
                                 />
                             </div>
                             <div className="flex w-80 shrink-0 flex-col gap-3">
