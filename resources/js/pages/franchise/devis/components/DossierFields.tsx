@@ -123,28 +123,30 @@ export default function DossierFields({ data, onChange, disabled = false, errors
                     </RadioGroup>
                 </div>
 
-                <div className="grid gap-1.5">
-                    <Label>Type d'installateur</Label>
-                    <RadioGroup
-                        value={data.type_installateur}
-                        onValueChange={(value) => onChange('type_installateur', value)}
-                        className="flex gap-4"
-                        disabled={disabled}
-                    >
-                        <div className="flex items-center gap-2">
-                            <RadioGroupItem value="autoconstructeur" id="type_installateur_auto" />
-                            <Label htmlFor="type_installateur_auto">Autoconstructeur</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <RadioGroupItem value="installateur_agree" id="type_installateur_agree" />
-                            <Label htmlFor="type_installateur_agree">Installateur agréé</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <RadioGroupItem value="installateur_non_agree" id="type_installateur_non_agree" />
-                            <Label htmlFor="type_installateur_non_agree">Installateur non agréé</Label>
-                        </div>
-                    </RadioGroup>
-                </div>
+                {data.installateur === 'vente_kit' && (
+                    <div className="grid gap-1.5">
+                        <Label>Type d'installateur</Label>
+                        <RadioGroup
+                            value={data.type_installateur}
+                            onValueChange={(value) => onChange('type_installateur', value)}
+                            className="flex gap-4"
+                            disabled={disabled}
+                        >
+                            <div className="flex items-center gap-2">
+                                <RadioGroupItem value="autoconstructeur" id="type_installateur_auto" />
+                                <Label htmlFor="type_installateur_auto">Autoconstructeur</Label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <RadioGroupItem value="installateur_agree" id="type_installateur_agree" />
+                                <Label htmlFor="type_installateur_agree">Installateur agréé</Label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <RadioGroupItem value="installateur_non_agree" id="type_installateur_non_agree" />
+                                <Label htmlFor="type_installateur_non_agree">Installateur non agréé</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+                )}
 
                 <Field id="installateur_agree_nom" label="Installateur agréé">
                     <Input
@@ -174,7 +176,7 @@ export default function DossierFields({ data, onChange, disabled = false, errors
                                 id="type_realisation_accompagnement"
                             />
                             <Label htmlFor="type_realisation_accompagnement">
-                                Accompagnement de l'auto-constructeur
+                                Accompagnement de l'autoconstructeur
                             </Label>
                         </div>
                     </RadioGroup>
