@@ -1,15 +1,13 @@
 import { Head, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import DossierFields from './components/DossierFields';
+import type { Scenario } from './types';
 
-interface Scenario {
-    id: number;
-    famille: string;
-    nom: string;
-}
+/** Le formulaire de création ne reçoit que la liste des scénarios sélectionnables. */
+type ScenarioResume = Pick<Scenario, 'id' | 'nom' | 'famille'>;
 
 interface Props {
-    scenarios: Scenario[];
+    scenarios: ScenarioResume[];
 }
 
 export default function Create({ scenarios }: Props) {
