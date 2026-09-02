@@ -8,7 +8,7 @@ use App\Models\Devis;
 use App\Models\DevisReponse;
 use App\Models\Produit;
 use App\Models\DevisMainOeuvre;
-use App\Models\Parametre;
+use App\Models\TauxHoraire;
 use App\Exports\DevisExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\MoteurScenarios;
@@ -183,14 +183,31 @@ class DevisController extends Controller
      */
     public function storeMainOeuvre(Request $request, Devis $devis)
     {
-        $validated = $request->validate([
-            'libelle' => 'required|string|max:255',
-            'description' => 'required|string',
-            'nombre_heures_chantier' => 'required|numeric|min:0',
-            'nombre_heures_mini_pelle' => 'required|numeric|min:0',
+        $validated = $this->validateMainOeuvre($request);
+
+        $mainOeuvre = $devis->mainOeuvres()->create([
+            'libelle' => $validated['libelle'],
+            'description' => $validated['description'],
         ]);
 
-        $devis->mainOeuvres()->create($validated);
+        $mainOeuvre->heures()->sync($this->heuresPivot($validated['heures']));
+
+        return redirect(route('franchise.devis.show', $devis) . '?tab=chiffrage');
+    }
+
+    /**
+     * Met à jour une ligne de main d'œuvre existante (titre, description, heures).
+     */
+    public function updateMainOeuvre(Request $request, Devis $devis, DevisMainOeuvre $mainOeuvre)
+    {
+        $validated = $this->validateMainOeuvre($request);
+
+        $mainOeuvre->update([
+            'libelle' => $validated['libelle'],
+            'description' => $validated['description'],
+        ]);
+
+        $mainOeuvre->heures()->sync($this->heuresPivot($validated['heures']));
 
         return redirect(route('franchise.devis.show', $devis) . '?tab=chiffrage');
     }
@@ -203,6 +220,30 @@ class DevisController extends Controller
         $mainOeuvre->delete();
 
         return redirect(route('franchise.devis.show', $devis) . '?tab=chiffrage');
+    }
+
+    private function validateMainOeuvre(Request $request): array
+    {
+        return $request->validate([
+            'libelle' => 'required|string|max:255',
+            'description' => 'required|string',
+            'heures' => 'required|array|min:1',
+            'heures.*.taux_horaire_id' => 'required|exists:taux_horaires,id',
+            'heures.*.nombre_heures' => 'required|numeric|min:0',
+        ]);
+    }
+
+    /**
+     * Transforme les heures du formulaire ([{taux_horaire_id, nombre_heures}])
+     * en tableau attendu par sync() : [taux_horaire_id => ['nombre_heures' => n]].
+     */
+    private function heuresPivot(array $heures): array
+    {
+        return collect($heures)
+            ->mapWithKeys(fn (array $heure) => [
+                $heure['taux_horaire_id'] => ['nombre_heures' => $heure['nombre_heures']],
+            ])
+            ->all();
     }
 
 
@@ -311,16 +352,18 @@ class DevisController extends Controller
             })->values();
         }
 
-        $parametre = Parametre::current();
+        $tauxHoraires = TauxHoraire::orderBy('id')->get();
 
-        $mainOeuvres = $devis->mainOeuvres->map(fn(DevisMainOeuvre $mo) => [
+        $mainOeuvres = $devis->mainOeuvres()->with('heures')->get()->map(fn (DevisMainOeuvre $mo) => [
             'id' => $mo->id,
             'libelle' => $mo->libelle,
             'description' => $mo->description,
-            'nombre_heures_chantier' => $mo->nombre_heures_chantier,
-            'nombre_heures_mini_pelle' => $mo->nombre_heures_mini_pelle,
-            'cout' => $mo->nombre_heures_chantier * $parametre->taux_horaire_chantier
-                + $mo->nombre_heures_mini_pelle * $parametre->taux_horaire_mini_pelle,
+            'heures' => $mo->heures->map(fn (TauxHoraire $taux) => [
+                'taux_horaire_id' => $taux->id,
+                'libelle' => $taux->libelle,
+                'nombre_heures' => $taux->pivot->nombre_heures,
+            ])->values(),
+            'cout' => $mo->heures->sum(fn (TauxHoraire $taux) => $taux->pivot->nombre_heures * $taux->montant),
         ]);
 
         $totalProduits = $resolution->sum(fn(array $ligne) => $ligne['quantite'] * ($ligne['prix'] ?? 0));
@@ -352,10 +395,7 @@ class DevisController extends Controller
             'visibleQuestionIds' => $visibleQuestionIds,
             'mainOeuvres' => $mainOeuvres,
             'totaux' => $totaux,
-            'tauxHoraires' => [
-                'chantier' => (float) $parametre->taux_horaire_chantier,
-                'mini_pelle' => (float) $parametre->taux_horaire_mini_pelle,
-            ],
+            'tauxHoraires' => $tauxHoraires,
         ]);
     }
 }

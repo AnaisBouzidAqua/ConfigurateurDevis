@@ -2,9 +2,9 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { TauxHoraires } from './components/AjouterMainOeuvreDialog';
 import ChiffrageTab from './components/ChiffrageTab';
 import DossierFields from './components/DossierFields';
+import type { MainOeuvre, TauxHoraire } from './components/MainOeuvreDialog';
 import Recapitulatif from './components/Recapitulatif';
 
 interface QuestionOption {
@@ -65,16 +65,6 @@ interface Ligne {
     prix: number | null;
 }
 
-interface MainOeuvre {
-    id: number;
-    libelle: string;
-    description: string | null;
-    nombre_heures_chantier: number;
-    nombre_heures_mini_pelle: number;
-    cout: number;
-}
-
-
 interface Totaux {
     total_ht: number;
     total_tva: number;
@@ -87,7 +77,7 @@ interface Props {
     visibleQuestionIds: number[];
     mainOeuvres: MainOeuvre[];
     totaux: Totaux;
-    tauxHoraires: TauxHoraires;
+    tauxHoraires: TauxHoraire[];
 }
 
 function toDossierData(devis: Devis) {

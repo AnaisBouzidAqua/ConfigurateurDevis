@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { MainOeuvre } from './MainOeuvreDialog';
 
 interface Ligne {
     cle: string;
@@ -13,15 +14,6 @@ interface Ligne {
     quantite: number;
     nom: string;
     prix: number | null;
-}
-
-interface MainOeuvre {
-    id: number;
-    libelle: string;
-    description: string | null;
-    nombre_heures_chantier: number;
-    nombre_heures_mini_pelle: number;
-    cout: number;
 }
 
 interface Totaux {

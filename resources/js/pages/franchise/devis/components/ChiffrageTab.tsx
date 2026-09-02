@@ -1,15 +1,22 @@
 import { router } from '@inertiajs/react';
-import { ChevronDown, Info, Layers } from 'lucide-react';
+import { ChevronDown, Info, Layers, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { SectionTitle } from '@/components/section-title';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuIconTrigger,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { AjouterMainOeuvreDialog } from './AjouterMainOeuvreDialog';
-import type { TauxHoraires } from './AjouterMainOeuvreDialog';
+import { MainOeuvreDialog } from './MainOeuvreDialog';
+import type { MainOeuvre, TauxHoraire } from './MainOeuvreDialog';
 
 
 interface QuestionOption {
@@ -42,22 +49,13 @@ interface DevisReponse {
     question_option_id: number;
 }
 
-interface MainOeuvre {
-    id: number;
-    libelle: string;
-    description: string | null;
-    nombre_heures_chantier: number;
-    nombre_heures_mini_pelle: number;
-    cout: number;
-}
-
 interface Props {
     devisId: number;
     scenario: Scenario | null;
     reponses: DevisReponse[];
     visibleQuestionIds: number[];
     mainOeuvres: MainOeuvre[];
-    tauxHoraires: TauxHoraires;
+    tauxHoraires: TauxHoraire[];
 }
 
 export default function ChiffrageTab({
@@ -72,6 +70,22 @@ export default function ChiffrageTab({
         Object.fromEntries(reponses.map((r) => [r.question_id, String(r.question_option_id)])),
     );
     const [mainOeuvreDialogOpen, setMainOeuvreDialogOpen] = useState(false);
+    const [mainOeuvreEnEdition, setMainOeuvreEnEdition] = useState<MainOeuvre | null>(null);
+
+    function ouvrirAjoutMainOeuvre() {
+        setMainOeuvreEnEdition(null);
+        setMainOeuvreDialogOpen(true);
+    }
+
+    function ouvrirEditionMainOeuvre(mainOeuvre: MainOeuvre) {
+        setMainOeuvreEnEdition(mainOeuvre);
+        setMainOeuvreDialogOpen(true);
+    }
+
+    function fermerMainOeuvreDialog() {
+        setMainOeuvreDialogOpen(false);
+        setMainOeuvreEnEdition(null);
+    }
 
     function setAnswer(questionId: number, optionId: string) {
         setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
@@ -175,15 +189,35 @@ export default function ChiffrageTab({
                     <SectionTitle>Main d'œuvre</SectionTitle>
                     <ul className="flex flex-col gap-2">
                         {mainOeuvres.map((mo) => (
-                            <li key={mo.id} className="grid grid-cols-[1fr_auto_auto] items-start gap-x-4 text-sm">
+                            <li key={mo.id} className="grid grid-cols-[1fr_auto] items-start gap-x-2 text-sm">
                                 <div>
                                     <span className="text-muted-foreground">{mo.libelle}</span>
                                     {mo.description && (
                                         <p className="text-muted-foreground/70 text-xs">{mo.description}</p>
                                     )}
+                                    {mo.heures.length > 0 && (
+                                        <p className="text-muted-foreground/70 text-xs">
+                                            {mo.heures.map((h) => `${h.nombre_heures} h ${h.libelle}`).join(' · ')}
+                                        </p>
+                                    )}
                                 </div>
-                                <span className="text-foreground">{mo.nombre_heures_chantier}h chantier</span>
-                                <span className="text-foreground">{mo.nombre_heures_mini_pelle}h mini-pelle</span>
+                                <DropdownMenu>
+                                    <DropdownMenuIconTrigger aria-label={`Actions pour ${mo.libelle}`}>
+                                        <MoreVertical className="size-4" />
+                                    </DropdownMenuIconTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => ouvrirEditionMainOeuvre(mo)}>
+                                            <Pencil /> Modifier
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            variant="destructive"
+                                            onClick={() => router.delete(`/devis/${devisId}/main-oeuvre/${mo.id}`)}
+                                        >
+                                            <Trash2 /> Supprimer
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </li>
                         ))}
                     </ul>
@@ -191,17 +225,19 @@ export default function ChiffrageTab({
             )}
 
             <div className="flex justify-center">
-                <Button type="button" onClick={() => setMainOeuvreDialogOpen(true)}>
+                <Button type="button" onClick={ouvrirAjoutMainOeuvre}>
                     + Ajouter main d'œuvre
                 </Button>
             </div>
         </div>
 
-        <AjouterMainOeuvreDialog
+        <MainOeuvreDialog
+            key={mainOeuvreEnEdition?.id ?? 'nouvelle'}
             devisId={devisId}
             open={mainOeuvreDialogOpen}
-            onClose={() => setMainOeuvreDialogOpen(false)}
+            onClose={fermerMainOeuvreDialog}
             tauxHoraires={tauxHoraires}
+            mainOeuvre={mainOeuvreEnEdition}
         />
     </div>
 );

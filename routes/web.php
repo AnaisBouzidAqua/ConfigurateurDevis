@@ -36,13 +36,16 @@ Route::prefix('devis')->name('franchise.devis.')->group(function () {
     Route::post('/{devis}/tarification', [DevisController::class, 'updateTarification'])->name('tarification.update');
     Route::delete('/{devis}/reponses', [DevisController::class, 'clearReponses'])->name('reponses.clear');
     Route::post('/{devis}/main-oeuvre', [DevisController::class, 'storeMainOeuvre'])->name('main_oeuvre.store');
+    Route::put('/{devis}/main-oeuvre/{mainOeuvre}', [DevisController::class, 'updateMainOeuvre'])->name('main_oeuvre.update');
     Route::delete('/{devis}/main-oeuvre/{mainOeuvre}', [DevisController::class, 'destroyMainOeuvre'])->name('main_oeuvre.destroy');
     Route::put('/{devis}/archiver', [DevisController::class, 'archiver'])->name('archiver');
 });
 
 Route::name('franchise.')->group(function () {
     Route::get('/parametres', [ParametreController::class, 'edit'])->name('parametres.edit');
-    Route::put('/parametres', [ParametreController::class, 'update'])->name('parametres.update');
+    Route::post('/parametres/taux-horaires', [ParametreController::class, 'storeTauxHoraire'])->name('parametres.taux_horaires.store');
+    Route::put('/parametres/taux-horaires/{tauxHoraire}', [ParametreController::class, 'updateTauxHoraire'])->name('parametres.taux_horaires.update');
+    Route::delete('/parametres/taux-horaires/{tauxHoraire}', [ParametreController::class, 'destroyTauxHoraire'])->name('parametres.taux_horaires.destroy');
 });
 
 
