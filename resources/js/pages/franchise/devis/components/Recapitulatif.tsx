@@ -6,21 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { MainOeuvre } from './MainOeuvreDialog';
-
-interface Ligne {
-    cle: string;
-    produit_ref: string | null;
-    quantite: number;
-    nom: string;
-    prix: number | null;
-}
-
-interface Totaux {
-    total_ht: number;
-    total_tva: number;
-    total_ttc: number;
-}
+import type { Ligne, MainOeuvre, Totaux } from '../types';
 
 interface Props {
     devisId: number;

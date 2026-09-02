@@ -8,20 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-
-export interface TauxHoraire {
-    id: number;
-    libelle: string;
-    montant: number;
-}
-
-export interface MainOeuvre {
-    id: number;
-    libelle: string;
-    description: string | null;
-    heures: { taux_horaire_id: number; libelle: string; nombre_heures: number }[];
-    cout: number;
-}
+import type { MainOeuvre, TauxHoraire } from '../types';
 
 interface Props {
     devisId: number;

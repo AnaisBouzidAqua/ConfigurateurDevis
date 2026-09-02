@@ -15,39 +15,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import type { DevisReponse, MainOeuvre, Scenario, TauxHoraire } from '../types';
 import { MainOeuvreDialog } from './MainOeuvreDialog';
-import type { MainOeuvre, TauxHoraire } from './MainOeuvreDialog';
-
-
-interface QuestionOption {
-    id: number;
-    libelle: string;
-}
-
-interface Question {
-    id: number;
-    texte: string;
-    infos_bulle: string | null;
-    options: QuestionOption[];
-}
-
-interface Rubrique {
-    id: number;
-    titre: string;
-    bulle_infos: string | null;
-    questions: Question[];
-}
-
-interface Scenario {
-    id: number;
-    nom: string;
-    rubriques: Rubrique[];
-}
-
-interface DevisReponse {
-    question_id: number;
-    question_option_id: number;
-}
 
 interface Props {
     devisId: number;

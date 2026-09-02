@@ -4,39 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ChiffrageTab from './components/ChiffrageTab';
 import DossierFields from './components/DossierFields';
-import type { MainOeuvre, TauxHoraire } from './components/MainOeuvreDialog';
 import Recapitulatif from './components/Recapitulatif';
-
-interface QuestionOption {
-    id: number;
-    libelle: string;
-}
-
-interface Question {
-    id: number;
-    texte: string;
-    infos_bulle: string | null;
-    options: QuestionOption[];
-}
-
-interface Rubrique {
-    id: number;
-    titre: string;
-    bulle_infos: string | null;
-    questions: Question[];
-}
-
-interface Scenario {
-    id: number;
-    nom: string;
-    famille: string;
-    rubriques: Rubrique[];
-}
-
-interface DevisReponse {
-    question_id: number;
-    question_option_id: number;
-}
+import type { DevisReponse, Ligne, MainOeuvre, Scenario, TauxHoraire, Totaux } from './types';
 
 interface Devis {
     id: number;
@@ -55,20 +24,6 @@ interface Devis {
     remise_type: 'montant' | 'pourcentage' | null;
     scenario: Scenario | null;
     reponses: DevisReponse[];
-}
-
-interface Ligne {
-    cle: string;
-    produit_ref: string | null;
-    quantite: number;
-    nom: string;
-    prix: number | null;
-}
-
-interface Totaux {
-    total_ht: number;
-    total_tva: number;
-    total_ttc: number;
 }
 
 interface Props {
