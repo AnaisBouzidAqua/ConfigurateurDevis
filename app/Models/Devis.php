@@ -22,8 +22,6 @@ class Devis extends Model
         'remise_valeur',
         'remise_type',
         'total_ht',
-        'total_tva',
-        'total_ttc',
         'statut',
         'archived_at',
     ];

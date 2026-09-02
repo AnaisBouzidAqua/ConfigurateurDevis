@@ -180,18 +180,10 @@ export default function Recapitulatif({
             </div>
 
 
-            <div className="mt-4 flex flex-col gap-1 border-t pt-3 text-sm">
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total HT</span>
-                    <span className="text-foreground">{totaux.total_ht.toFixed(2)} €</span>
-                </div>
-                <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total TVA</span>
-                    <span className="text-foreground">{totaux.total_tva.toFixed(2)} €</span>
-                </div>
+            <div className="mt-4 border-t pt-3 text-sm">
                 <div className="flex justify-between font-semibold">
-                    <span className="text-foreground">Total TTC</span>
-                    <span className="text-foreground">{totaux.total_ttc.toFixed(2)} €</span>
+                    <span className="text-foreground">Résultat</span>
+                    <span className="text-foreground">{totaux.total_ht.toFixed(2)} €</span>
                 </div>
             </div>
         </aside>

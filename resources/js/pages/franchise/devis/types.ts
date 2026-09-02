@@ -58,7 +58,6 @@ export interface MainOeuvre {
 }
 
 export interface Totaux {
+    /** Affiché sous le libellé « Résultat » dans le Récapitulatif. */
     total_ht: number;
-    total_tva: number;
-    total_ttc: number;
 }

@@ -375,17 +375,14 @@ class DevisController extends Controller
             default => $devis->remise_valeur ?? 0,
         };
 
-        $totalHt = max(0, $totalApresCoefficient - $remiseMontant);
-        $totalTva = round($totalHt * 0.20, 2);
-
+        // Le Récapitulatif n'affiche plus qu'un seul montant (« Résultat ») :
+        // la TVA et le TTC ne sont plus calculés.
         $totaux = [
-            'total_ht' => round($totalHt, 2),
-            'total_tva' => $totalTva,
-            'total_ttc' => round($totalHt + $totalTva, 2),
+            'total_ht' => round(max(0, $totalApresCoefficient - $remiseMontant), 2),
         ];
 
         // Persiste le total recalculé sur le devis lui-même, pour que
-        // l'Historique des chiffrages (qui lit directement ces colonnes,
+        // l'Historique des chiffrages (qui lit directement cette colonne,
         // sans repasser par ce calcul) affiche la bonne valeur.
         $devis->update($totaux);
 
