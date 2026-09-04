@@ -90,3 +90,9 @@ export interface Catalogues {
     prestation: ArticleCatalogue[];
     fourniture: ArticleCatalogue[];
 }
+
+/** Tarif appliqué au devis : marge sur les produits et fournitures uniquement. */
+export interface Tarif {
+    type: 'pro' | 'public' | 'autoconstructeur';
+    taux_marge: number;
+}

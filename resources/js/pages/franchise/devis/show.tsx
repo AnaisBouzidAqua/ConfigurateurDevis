@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import ChiffrageTab from './components/ChiffrageTab';
 import DossierFields from './components/DossierFields';
 import Recapitulatif from './components/Recapitulatif';
-import type { Catalogues, DevisReponse, Ligne, LignesParCategorie, MainOeuvre, Scenario, TauxHoraire, Totaux } from './types';
+import type { Catalogues, DevisReponse, Ligne, LignesParCategorie, MainOeuvre, Scenario, Tarif, TauxHoraire, Totaux } from './types';
 
 interface Devis {
     id: number;
@@ -20,8 +20,6 @@ interface Devis {
     installateur_agree_nom: string | null;
     type_realisation: string | null;
     coefficient_difficulte: number;
-    remise_valeur: number | null;
-    remise_type: 'montant' | 'pourcentage' | null;
     scenario: Scenario | null;
     reponses: DevisReponse[];
 }
@@ -35,6 +33,7 @@ interface Props {
     catalogues: Catalogues;
     totaux: Totaux;
     tauxHoraires: TauxHoraire[];
+    tarif: Tarif;
 }
 
 function toDossierData(devis: Devis) {
@@ -61,7 +60,9 @@ export default function Show({
     catalogues,
     totaux,
     tauxHoraires,
+    tarif,
 }: Props) {
+    const facteurMarge = 1 + tarif.taux_marge / 100;
     const initialTab = new URLSearchParams(window.location.search).get('tab') === 'chiffrage' ? 'chiffrage' : 'dossier';
     const [tab, setTab] = useState<'dossier' | 'chiffrage'>(initialTab);
     const [dossierData, setDossierData] = useState(toDossierData(devis));
@@ -131,6 +132,7 @@ export default function Show({
                                     mainOeuvres={mainOeuvres}
                                     tauxHoraires={tauxHoraires}
                                     catalogues={catalogues}
+                                    facteurMargeFournitures={facteurMarge}
                                 />
                             </div>
                             <div className="flex w-80 shrink-0 flex-col gap-3">
@@ -140,9 +142,8 @@ export default function Show({
                                     mainOeuvres={mainOeuvres}
                                     lignesCatalogue={[...lignes.prestation, ...lignes.fourniture]}
                                     totaux={totaux}
+                                    tarif={tarif}
                                     coefficientDifficulte={devis.coefficient_difficulte}
-                                    remiseValeur={devis.remise_valeur}
-                                    remiseType={devis.remise_type}
                                 />
                                 <Button
                                     type="button"

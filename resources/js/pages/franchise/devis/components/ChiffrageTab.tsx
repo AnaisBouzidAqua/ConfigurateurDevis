@@ -28,6 +28,8 @@ interface Props {
     mainOeuvres: MainOeuvre[];
     tauxHoraires: TauxHoraire[];
     catalogues: Catalogues;
+    /** Facteur de marge à appliquer aux fournitures (1 = aucune marge). */
+    facteurMargeFournitures: number;
 }
 
 export default function ChiffrageTab({
@@ -38,6 +40,7 @@ export default function ChiffrageTab({
     mainOeuvres,
     tauxHoraires,
     catalogues,
+    facteurMargeFournitures,
 }: Props) {
     const [answers, setAnswers] = useState<Record<number, string>>(
         Object.fromEntries(reponses.map((r) => [r.question_id, String(r.question_option_id)])),
@@ -234,6 +237,7 @@ export default function ChiffrageTab({
                 devisId={devisId}
                 categorie={categorieLigneAjout}
                 articles={catalogues[categorieLigneAjout]}
+                facteurMarge={categorieLigneAjout === 'fourniture' ? facteurMargeFournitures : 1}
                 open
                 onClose={() => setCategorieLigneAjout(null)}
             />

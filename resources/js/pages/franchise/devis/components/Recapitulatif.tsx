@@ -4,15 +4,21 @@ import { useState } from 'react';
 import { SectionTitle, SubSectionTitle } from '@/components/section-title';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { Ligne, LigneCatalogue, MainOeuvre, Totaux } from '../types';
+import { formatEuros } from '@/lib/utils';
+import type { Ligne, LigneCatalogue, MainOeuvre, Tarif, Totaux } from '../types';
+
+const LABELS_TARIF: Record<Tarif['type'], string> = {
+    pro: 'professionnel',
+    public: 'public',
+    autoconstructeur: 'autoconstructeur',
+};
 
 function LigneCatalogueRow({ ligne, devisId }: { ligne: LigneCatalogue; devisId: number }) {
     return (
         <div className="grid grid-cols-[1fr_auto_auto] items-start gap-x-2 text-sm">
             <span className="text-muted-foreground">{ligne.libelle}</span>
-            <span className="text-foreground w-20 text-right">{(ligne.quantite * ligne.prix_unitaire).toFixed(2)} €</span>
+            <span className="text-foreground w-20 text-right">{formatEuros(ligne.quantite * ligne.prix_unitaire)}</span>
             <button
                 type="button"
                 onClick={() => router.delete(`/devis/${devisId}/lignes/${ligne.id}`)}
@@ -31,9 +37,8 @@ interface Props {
     mainOeuvres: MainOeuvre[];
     lignesCatalogue: LigneCatalogue[];
     totaux: Totaux;
+    tarif: Tarif;
     coefficientDifficulte: number;
-    remiseValeur: number | null;
-    remiseType: 'montant' | 'pourcentage' | null;
 }
 
 export default function Recapitulatif({
@@ -42,30 +47,21 @@ export default function Recapitulatif({
     mainOeuvres,
     lignesCatalogue,
     totaux,
+    tarif,
     coefficientDifficulte,
-    remiseValeur,
-    remiseType,
 }: Props) {
     const prestations = lignesCatalogue.filter((ligne) => ligne.categorie === 'prestation');
     const fournitures = lignesCatalogue.filter((ligne) => ligne.categorie === 'fourniture');
     const rienAChiffrer = lignes.length === 0 && mainOeuvres.length === 0 && lignesCatalogue.length === 0;
 
     const [coefficient, setCoefficient] = useState(String(coefficientDifficulte));
-    const [remise, setRemise] = useState(remiseValeur !== null ? String(remiseValeur) : '0');
-    const [typeRemise, setTypeRemise] = useState<'montant' | 'pourcentage'>(remiseType ?? 'montant');
     const [coefficientError, setCoefficientError] = useState<string | null>(null);
 
-    function saveTarification(changes: {
-        coefficient_difficulte?: string;
-        remise_valeur?: string;
-        remise_type?: string;
-    }) {
+    function saveTarification(changes: { coefficient_difficulte?: string }) {
         router.post(
             `/devis/${devisId}/tarification`,
             {
                 coefficient_difficulte: changes.coefficient_difficulte ?? coefficient,
-                remise_valeur: changes.remise_valeur ?? remise,
-                remise_type: changes.remise_type ?? typeRemise,
             },
             {
                 preserveState: true,
@@ -101,7 +97,7 @@ export default function Recapitulatif({
                                     <span className="text-muted-foreground">×{ligne.quantite}</span>
                                     <span className="text-muted-foreground">{ligne.nom}</span>
                                     <span className="text-foreground w-20 text-right">
-                                        {ligne.prix !== null ? `${(ligne.quantite * ligne.prix).toFixed(2)} €` : '—'}
+                                        {ligne.prix !== null ? formatEuros(ligne.quantite * ligne.prix) : '—'}
                                     </span>
                                     <span className="size-4" aria-hidden="true" />
                                 </div>
@@ -127,7 +123,7 @@ export default function Recapitulatif({
                                     ) : (
                                         <span className="text-muted-foreground">{mo.libelle}</span>
                                     )}
-                                    <span className="text-foreground w-20 text-right">{mo.cout.toFixed(2)} €</span>
+                                    <span className="text-foreground w-20 text-right">{formatEuros(mo.cout)}</span>
                                     <button
                                         type="button"
                                         onClick={() => router.delete(`/devis/${devisId}/main-oeuvre/${mo.id}`)}
@@ -161,14 +157,10 @@ export default function Recapitulatif({
                 </div>
             )}
 
-            <div className="mt-4">
-                <SubSectionTitle>Prix</SubSectionTitle>
-            </div>
-
-            <div className="flex flex-col gap-3 border-t pt-3">
+            <div className="mt-4 flex flex-col gap-3 border-t pt-3">
                 <div className="grid gap-1.5">
                     <div className="flex items-center gap-1.5">
-                        <Label htmlFor="coefficient_difficulte" className="text-muted-foreground">
+                        <Label htmlFor="coefficient_difficulte" className="font-bold">
                             Coefficient de difficulté
                         </Label>
                         <span className="text-muted-foreground text-xs">%</span>
@@ -190,52 +182,26 @@ export default function Recapitulatif({
                     />
                     {coefficientError && <p className="text-sm text-red-600">{coefficientError}</p>}
                 </div>
-
-                <div className="grid gap-1.5">
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="remise_valeur" className="text-muted-foreground">
-                            Remise commerciale
-                        </Label>
-                        <RadioGroup
-                            value={typeRemise}
-                            onValueChange={(value) => {
-                                setTypeRemise(value as 'montant' | 'pourcentage');
-                                saveTarification({ remise_type: value });
-                            }}
-                            className="flex gap-3"
-                        >
-                            <div className="flex items-center gap-1">
-                                <RadioGroupItem value="montant" id="remise_montant" />
-                                <Label htmlFor="remise_montant" className="text-xs">
-                                    €
-                                </Label>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <RadioGroupItem value="pourcentage" id="remise_pourcentage" />
-                                <Label htmlFor="remise_pourcentage" className="text-xs">
-                                    %
-                                </Label>
-                            </div>
-                        </RadioGroup>
-                    </div>
-                    <Input
-                        id="remise_valeur"
-                        type="number"
-                        step="0.01"
-                        min={0}
-                        value={remise}
-                        onChange={(e) => setRemise(e.target.value)}
-                        onBlur={() => saveTarification({ remise_valeur: remise })}
-                    />
-                </div>
             </div>
-
 
             <div className="mt-4 border-t pt-3 text-sm">
                 <div className="flex justify-between font-semibold">
-                    <span className="text-foreground">Résultat</span>
-                    <span className="text-foreground">{totaux.total_ht.toFixed(2)} €</span>
+                    <span className="text-foreground flex items-center gap-1.5">
+                        Résultat
+                        <Tooltip>
+                            <TooltipTrigger type="button">
+                                <Info className="text-muted-foreground size-3.5" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                Résultat prenant en compte vos marges d'après le type du dossier.
+                            </TooltipContent>
+                        </Tooltip>
+                    </span>
+                    <span className="text-foreground">{formatEuros(totaux.total_ht)}</span>
                 </div>
+                <p className="text-muted-foreground mt-1 text-xs">
+                    Tarif {LABELS_TARIF[tarif.type]} — marge {tarif.taux_marge}&nbsp;%
+                </p>
             </div>
         </aside>
     );

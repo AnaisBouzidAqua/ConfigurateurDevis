@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { cn, formatEuros } from '@/lib/utils';
 import type { Produit, Question, Rubrique } from './RubriquesSection';
 
 export interface ReponseDataProduit {
@@ -209,7 +209,7 @@ export function ReponseCard({
                                         {!produit.produit_ref && <PenLine className="text-muted-foreground size-3.5" />}
                                         {produit.produit_ref
                                             ? `${produit.quantite} × ${produits.find((p) => p.ref === produit.produit_ref)?.nom ?? produit.produit_ref}`
-                                            : `${produit.quantite} × ${produit.libelle_libre} (${produit.prix_libre} €)`}
+                                            : `${produit.quantite} × ${produit.libelle_libre} (${formatEuros(produit.prix_libre ?? 0)})`}
                                         <button
                                             type="button"
                                             onClick={() => removeProduit(produitIndex)}

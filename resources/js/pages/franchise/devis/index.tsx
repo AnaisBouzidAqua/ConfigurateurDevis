@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { formatEuros } from '@/lib/utils';
 import { FiltreDates } from './components/FiltreDates';
 import { Pagination } from './components/Pagination';
 import { LABELS_INSTALLATEUR, LABELS_TYPE_INSTALLATEUR } from './constants';
@@ -245,7 +246,7 @@ export default function Index({
                                             : (LABELS_TYPE_INSTALLATEUR[row.type_installateur] ?? '—')}
                                     </td>
                                     <td className="text-muted-foreground px-4 py-4">
-                                        {row.total_ht !== null ? `${Number(row.total_ht).toFixed(2)} €` : '—'}
+                                        {row.total_ht !== null ? formatEuros(Number(row.total_ht)) : '—'}
                                     </td>
                                     <td className="text-muted-foreground px-4 py-4">
                                         {new Date(row.created_at).toLocaleDateString('fr-FR')}

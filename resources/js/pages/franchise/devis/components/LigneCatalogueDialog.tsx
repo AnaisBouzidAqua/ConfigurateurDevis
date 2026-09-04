@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import { cn, formatEuros } from '@/lib/utils';
 import type { ArticleCatalogue, CategorieLigne } from '../types';
 
 const LIBELLES: Record<CategorieLigne, { singulier: string; ajouter: string }> = {
@@ -27,11 +27,13 @@ interface Props {
     devisId: number;
     categorie: CategorieLigne;
     articles: ArticleCatalogue[];
+    /** Marge appliquée au prix catalogue pour l'affichage (1 = aucune). */
+    facteurMarge: number;
     open: boolean;
     onClose: () => void;
 }
 
-export function LigneCatalogueDialog({ devisId, categorie, articles, open, onClose }: Props) {
+export function LigneCatalogueDialog({ devisId, categorie, articles, facteurMarge, open, onClose }: Props) {
     const libelles = LIBELLES[categorie];
 
     const form = useForm({
@@ -109,7 +111,7 @@ export function LigneCatalogueDialog({ devisId, categorie, articles, open, onClo
                                                         <Check className={cn('size-4', estSelectionne ? 'opacity-100' : 'opacity-0')} />
                                                         <span className="flex-1">{article.nom}</span>
                                                         <span className="text-muted-foreground text-xs">
-                                                            {article.prix.toFixed(2)} €
+                                                            {formatEuros(article.prix * facteurMarge)}
                                                         </span>
                                                     </CommandItem>
                                                 );
