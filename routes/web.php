@@ -38,6 +38,8 @@ Route::prefix('devis')->name('franchise.devis.')->group(function () {
     Route::post('/{devis}/main-oeuvre', [DevisController::class, 'storeMainOeuvre'])->name('main_oeuvre.store');
     Route::put('/{devis}/main-oeuvre/{mainOeuvre}', [DevisController::class, 'updateMainOeuvre'])->name('main_oeuvre.update');
     Route::delete('/{devis}/main-oeuvre/{mainOeuvre}', [DevisController::class, 'destroyMainOeuvre'])->name('main_oeuvre.destroy');
+    Route::post('/{devis}/lignes', [DevisController::class, 'storeLigne'])->name('lignes.store');
+    Route::delete('/{devis}/lignes/{ligne}', [DevisController::class, 'destroyLigne'])->name('lignes.destroy');
     Route::put('/{devis}/archiver', [DevisController::class, 'archiver'])->name('archiver');
 });
 

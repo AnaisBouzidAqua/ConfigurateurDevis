@@ -61,3 +61,32 @@ export interface Totaux {
     /** Affiché sous le libellé « Résultat » dans le Récapitulatif. */
     total_ht: number;
 }
+
+export type CategorieLigne = 'prestation' | 'fourniture';
+
+/** Article sélectionnable dans le combobox (catalogue prestations ou fournitures). */
+export interface ArticleCatalogue {
+    ref: string;
+    nom: string;
+    prix: number;
+}
+
+/** Ligne prestation/fourniture ajoutée manuellement au devis (prix figé à l'ajout). */
+export interface LigneCatalogue {
+    id: number;
+    categorie: CategorieLigne;
+    produit_ref: string | null;
+    libelle: string;
+    quantite: number;
+    prix_unitaire: number;
+}
+
+export interface LignesParCategorie {
+    prestation: LigneCatalogue[];
+    fourniture: LigneCatalogue[];
+}
+
+export interface Catalogues {
+    prestation: ArticleCatalogue[];
+    fourniture: ArticleCatalogue[];
+}

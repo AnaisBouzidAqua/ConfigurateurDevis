@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { ChevronDown, Info, Layers, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, HardHat, Info, Layers, MoreVertical, Package, Pencil, Trash2, Wrench } from 'lucide-react';
 import { useState } from 'react';
 import { EmptyState } from '@/components/empty-state';
 import { SectionTitle } from '@/components/section-title';
@@ -11,11 +11,13 @@ import {
     DropdownMenuIconTrigger,
     DropdownMenuItem,
     DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { DevisReponse, MainOeuvre, Scenario, TauxHoraire } from '../types';
+import type { Catalogues, CategorieLigne, DevisReponse, MainOeuvre, Scenario, TauxHoraire } from '../types';
+import { LigneCatalogueDialog } from './LigneCatalogueDialog';
 import { MainOeuvreDialog } from './MainOeuvreDialog';
 
 interface Props {
@@ -25,6 +27,7 @@ interface Props {
     visibleQuestionIds: number[];
     mainOeuvres: MainOeuvre[];
     tauxHoraires: TauxHoraire[];
+    catalogues: Catalogues;
 }
 
 export default function ChiffrageTab({
@@ -34,6 +37,7 @@ export default function ChiffrageTab({
     visibleQuestionIds,
     mainOeuvres,
     tauxHoraires,
+    catalogues,
 }: Props) {
     const [answers, setAnswers] = useState<Record<number, string>>(
         Object.fromEntries(reponses.map((r) => [r.question_id, String(r.question_option_id)])),
@@ -55,6 +59,8 @@ export default function ChiffrageTab({
         setMainOeuvreDialogOpen(false);
         setMainOeuvreEnEdition(null);
     }
+
+    const [categorieLigneAjout, setCategorieLigneAjout] = useState<CategorieLigne | null>(null);
 
     function setAnswer(questionId: number, optionId: string) {
         setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
@@ -193,10 +199,23 @@ export default function ChiffrageTab({
                 </section>
             )}
 
-            <div className="flex justify-center">
-                <Button type="button" onClick={ouvrirAjoutMainOeuvre}>
-                    + Ajouter main d'œuvre
-                </Button>
+            <div className="flex justify-end">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button type="button">+ Ajouter</Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" side="bottom">
+                        <DropdownMenuItem onClick={ouvrirAjoutMainOeuvre}>
+                            <HardHat /> Main d'œuvre
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setCategorieLigneAjout('prestation')}>
+                            <Wrench /> Prestation de service
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setCategorieLigneAjout('fourniture')}>
+                            <Package /> Fournitures
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
 
@@ -208,6 +227,17 @@ export default function ChiffrageTab({
             tauxHoraires={tauxHoraires}
             mainOeuvre={mainOeuvreEnEdition}
         />
+
+        {categorieLigneAjout && (
+            <LigneCatalogueDialog
+                key={categorieLigneAjout}
+                devisId={devisId}
+                categorie={categorieLigneAjout}
+                articles={catalogues[categorieLigneAjout]}
+                open
+                onClose={() => setCategorieLigneAjout(null)}
+            />
+        )}
     </div>
 );
 }

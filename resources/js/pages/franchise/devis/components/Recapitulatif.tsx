@@ -6,12 +6,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { Ligne, MainOeuvre, Totaux } from '../types';
+import type { Ligne, LigneCatalogue, MainOeuvre, Totaux } from '../types';
+
+function LigneCatalogueRow({ ligne, devisId }: { ligne: LigneCatalogue; devisId: number }) {
+    return (
+        <div className="grid grid-cols-[1fr_auto_auto] items-start gap-x-2 text-sm">
+            <span className="text-muted-foreground">{ligne.libelle}</span>
+            <span className="text-foreground w-20 text-right">{(ligne.quantite * ligne.prix_unitaire).toFixed(2)} €</span>
+            <button
+                type="button"
+                onClick={() => router.delete(`/devis/${devisId}/lignes/${ligne.id}`)}
+                className="text-destructive hover:text-destructive/80"
+                aria-label={`Retirer ${ligne.libelle}`}
+            >
+                <X className="size-4" />
+            </button>
+        </div>
+    );
+}
 
 interface Props {
     devisId: number;
     lignes: Ligne[];
     mainOeuvres: MainOeuvre[];
+    lignesCatalogue: LigneCatalogue[];
     totaux: Totaux;
     coefficientDifficulte: number;
     remiseValeur: number | null;
@@ -22,11 +40,16 @@ export default function Recapitulatif({
     devisId,
     lignes,
     mainOeuvres,
+    lignesCatalogue,
     totaux,
     coefficientDifficulte,
     remiseValeur,
     remiseType,
 }: Props) {
+    const prestations = lignesCatalogue.filter((ligne) => ligne.categorie === 'prestation');
+    const fournitures = lignesCatalogue.filter((ligne) => ligne.categorie === 'fourniture');
+    const rienAChiffrer = lignes.length === 0 && mainOeuvres.length === 0 && lignesCatalogue.length === 0;
+
     const [coefficient, setCoefficient] = useState(String(coefficientDifficulte));
     const [remise, setRemise] = useState(remiseValeur !== null ? String(remiseValeur) : '0');
     const [typeRemise, setTypeRemise] = useState<'montant' | 'pourcentage'>(remiseType ?? 'montant');
@@ -63,51 +86,79 @@ export default function Recapitulatif({
             </div>
             <div className="-mx-4 border-b" />
 
-            {lignes.length === 0 ? (
-                <p className="text-muted-foreground mt-3 text-sm">Aucun produit pour l'instant.</p>
+            {rienAChiffrer ? (
+                <p className="text-muted-foreground mt-3 text-sm">Aucun élément pour l'instant.</p>
             ) : (
-                <ul className="mt-3 mb-4 flex flex-col gap-4">
-                    {lignes.map((ligne) => (
-                        <li
-                            key={ligne.cle}
-                            className="grid grid-cols-[auto_1fr_auto_auto] items-start gap-x-2 text-sm"
-                        >
-                            <span className="text-muted-foreground">×{ligne.quantite}</span>
-                            <span className="text-muted-foreground">{ligne.nom}</span>
-                            <span className="text-foreground w-20 text-right">
-                                {ligne.prix !== null ? `${(ligne.quantite * ligne.prix).toFixed(2)} €` : '—'}
-                            </span>
-                            <span className="size-4" aria-hidden="true" />
-                        </li>
-                    ))}
-                </ul>
-            )}
+                <div className="mt-3 mb-4 flex flex-col gap-4">
+                    {lignes.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                            <SubSectionTitle>Produits</SubSectionTitle>
+                            {lignes.map((ligne) => (
+                                <div
+                                    key={ligne.cle}
+                                    className="grid grid-cols-[auto_1fr_auto_auto] items-start gap-x-2 text-sm"
+                                >
+                                    <span className="text-muted-foreground">×{ligne.quantite}</span>
+                                    <span className="text-muted-foreground">{ligne.nom}</span>
+                                    <span className="text-foreground w-20 text-right">
+                                        {ligne.prix !== null ? `${(ligne.quantite * ligne.prix).toFixed(2)} €` : '—'}
+                                    </span>
+                                    <span className="size-4" aria-hidden="true" />
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
-            {mainOeuvres.length > 0 && (
-                <ul className="mb-4 flex flex-col gap-2">
-                    {mainOeuvres.map((mo) => (
-                        <li key={mo.id} className="grid grid-cols-[1fr_auto_auto] items-start gap-x-2 text-sm">
-                            {mo.description ? (
-                                <Tooltip>
-                                    <TooltipTrigger type="button" className="text-muted-foreground text-left">
-                                        {mo.libelle}
-                                    </TooltipTrigger>
-                                    <TooltipContent>{mo.description}</TooltipContent>
-                                </Tooltip>
-                            ) : (
-                                <span className="text-muted-foreground">{mo.libelle}</span>
-                            )}
-                            <span className="text-foreground w-20 text-right">{mo.cout.toFixed(2)} €</span>
-                            <button
-                                type="button"
-                                onClick={() => router.delete(`/devis/${devisId}/main-oeuvre/${mo.id}`)}
-                                className="text-destructive hover:text-destructive/80"
-                            >
-                                <X className="size-4" />
-                            </button>
-                        </li>
-                    ))}
-                </ul>
+                    {mainOeuvres.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                            <SubSectionTitle>Main d'œuvre</SubSectionTitle>
+                            {mainOeuvres.map((mo) => (
+                                <div
+                                    key={mo.id}
+                                    className="grid grid-cols-[1fr_auto_auto] items-start gap-x-2 text-sm"
+                                >
+                                    {mo.description ? (
+                                        <Tooltip>
+                                            <TooltipTrigger type="button" className="text-muted-foreground text-left">
+                                                {mo.libelle}
+                                            </TooltipTrigger>
+                                            <TooltipContent>{mo.description}</TooltipContent>
+                                        </Tooltip>
+                                    ) : (
+                                        <span className="text-muted-foreground">{mo.libelle}</span>
+                                    )}
+                                    <span className="text-foreground w-20 text-right">{mo.cout.toFixed(2)} €</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => router.delete(`/devis/${devisId}/main-oeuvre/${mo.id}`)}
+                                        className="text-destructive hover:text-destructive/80"
+                                        aria-label={`Retirer ${mo.libelle}`}
+                                    >
+                                        <X className="size-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {prestations.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                            <SubSectionTitle>Prestations de service</SubSectionTitle>
+                            {prestations.map((ligne) => (
+                                <LigneCatalogueRow key={ligne.id} ligne={ligne} devisId={devisId} />
+                            ))}
+                        </div>
+                    )}
+
+                    {fournitures.length > 0 && (
+                        <div className="flex flex-col gap-2">
+                            <SubSectionTitle>Fournitures</SubSectionTitle>
+                            {fournitures.map((ligne) => (
+                                <LigneCatalogueRow key={ligne.id} ligne={ligne} devisId={devisId} />
+                            ))}
+                        </div>
+                    )}
+                </div>
             )}
 
             <div className="mt-4">

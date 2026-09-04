@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import ChiffrageTab from './components/ChiffrageTab';
 import DossierFields from './components/DossierFields';
 import Recapitulatif from './components/Recapitulatif';
-import type { DevisReponse, Ligne, MainOeuvre, Scenario, TauxHoraire, Totaux } from './types';
+import type { Catalogues, DevisReponse, Ligne, LignesParCategorie, MainOeuvre, Scenario, TauxHoraire, Totaux } from './types';
 
 interface Devis {
     id: number;
@@ -31,6 +31,8 @@ interface Props {
     resolution: Ligne[];
     visibleQuestionIds: number[];
     mainOeuvres: MainOeuvre[];
+    lignes: LignesParCategorie;
+    catalogues: Catalogues;
     totaux: Totaux;
     tauxHoraires: TauxHoraire[];
 }
@@ -50,7 +52,16 @@ function toDossierData(devis: Devis) {
     };
 }
 
-export default function Show({ devis, resolution, visibleQuestionIds, mainOeuvres, totaux, tauxHoraires }: Props) {
+export default function Show({
+    devis,
+    resolution,
+    visibleQuestionIds,
+    mainOeuvres,
+    lignes,
+    catalogues,
+    totaux,
+    tauxHoraires,
+}: Props) {
     const initialTab = new URLSearchParams(window.location.search).get('tab') === 'chiffrage' ? 'chiffrage' : 'dossier';
     const [tab, setTab] = useState<'dossier' | 'chiffrage'>(initialTab);
     const [dossierData, setDossierData] = useState(toDossierData(devis));
@@ -59,7 +70,7 @@ export default function Show({ devis, resolution, visibleQuestionIds, mainOeuvre
         <>
             <Head title={`Chiffrage — ${devis.client_nom ?? 'Dossier'}`} />
 
-            <div className="flex flex-col gap-4 pt-8 pb-4 pr-6 pl-[52px] md:pr-4 md:pl-[44px]">
+            <div className="flex flex-col gap-4 pt-8 pb-32 pr-6 pl-[52px] md:pr-4 md:pl-[44px]">
                 <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between border-b border-border">
                         <div className="flex gap-6">
@@ -119,6 +130,7 @@ export default function Show({ devis, resolution, visibleQuestionIds, mainOeuvre
                                     visibleQuestionIds={visibleQuestionIds}
                                     mainOeuvres={mainOeuvres}
                                     tauxHoraires={tauxHoraires}
+                                    catalogues={catalogues}
                                 />
                             </div>
                             <div className="flex w-80 shrink-0 flex-col gap-3">
@@ -126,6 +138,7 @@ export default function Show({ devis, resolution, visibleQuestionIds, mainOeuvre
                                     devisId={devis.id}
                                     lignes={resolution}
                                     mainOeuvres={mainOeuvres}
+                                    lignesCatalogue={[...lignes.prestation, ...lignes.fourniture]}
                                     totaux={totaux}
                                     coefficientDifficulte={devis.coefficient_difficulte}
                                     remiseValeur={devis.remise_valeur}

@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Franchise;
 
+use App\Catalogues\FournitureCatalogue;
+use App\Catalogues\PrestationCatalogue;
 use App\Http\Controllers\Controller;
 use App\Models\Scenario;
 use App\Models\Devis;
+use App\Models\DevisLigne;
 use App\Models\DevisReponse;
 use App\Models\Produit;
 use App\Models\DevisMainOeuvre;
@@ -13,6 +16,7 @@ use App\Exports\DevisExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Services\MoteurScenarios;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DevisController extends Controller
 {
@@ -246,6 +250,60 @@ class DevisController extends Controller
             ->all();
     }
 
+    /**
+     * Ajoute une prestation de service ou une fourniture au devis, choisie
+     * dans le catalogue. Le prix est figé au moment de l'ajout (snapshot).
+     */
+    public function storeLigne(Request $request, Devis $devis)
+    {
+        $validated = $this->validateLigne($request);
+        $article = $this->articleCatalogue($validated['categorie'], $validated['produit_ref']);
+
+        $devis->lignes()->create([
+            'categorie' => $validated['categorie'],
+            'produit_ref' => $article['ref'],
+            'libelle' => $article['nom'],
+            'quantite' => $validated['quantite'],
+            'prix_unitaire' => $article['prix'],
+        ]);
+
+        return redirect(route('franchise.devis.show', $devis) . '?tab=chiffrage');
+    }
+
+    public function destroyLigne(Devis $devis, DevisLigne $ligne)
+    {
+        $ligne->delete();
+
+        return redirect(route('franchise.devis.show', $devis) . '?tab=chiffrage');
+    }
+
+    /**
+     * @return array{categorie: string, produit_ref: string, quantite: int}
+     */
+    private function validateLigne(Request $request): array
+    {
+        return $request->validate([
+            'categorie' => ['required', Rule::in(DevisLigne::CATEGORIES)],
+            'produit_ref' => ['required', 'string'],
+            'quantite' => ['required', 'integer', 'min:1'],
+        ]);
+    }
+
+    /**
+     * Retrouve un article dans le bon catalogue (fictif pour l'instant),
+     * ou 404 s'il n'existe pas / plus.
+     *
+     * @return array{ref: string, nom: string, prix: float}
+     */
+    private function articleCatalogue(string $categorie, string $ref): array
+    {
+        $catalogue = $categorie === DevisLigne::CATEGORIE_PRESTATION
+            ? PrestationCatalogue::all()
+            : FournitureCatalogue::all();
+
+        return $catalogue->firstWhere('ref', $ref) ?? abort(404, 'Article inconnu au catalogue.');
+    }
+
 
     /**
      * Enregistre le coefficient de difficulté et la remise commerciale
@@ -354,6 +412,15 @@ class DevisController extends Controller
 
         $tauxHoraires = TauxHoraire::orderBy('id')->get();
 
+        $lignes = $devis->lignes()->orderBy('id')->get()->map(fn (DevisLigne $ligne) => [
+            'id' => $ligne->id,
+            'categorie' => $ligne->categorie,
+            'produit_ref' => $ligne->produit_ref,
+            'libelle' => $ligne->libelle,
+            'quantite' => $ligne->quantite,
+            'prix_unitaire' => (float) $ligne->prix_unitaire,
+        ]);
+
         $mainOeuvres = $devis->mainOeuvres()->with('heures')->get()->map(fn (DevisMainOeuvre $mo) => [
             'id' => $mo->id,
             'libelle' => $mo->libelle,
@@ -367,7 +434,8 @@ class DevisController extends Controller
         ]);
 
         $totalProduits = $resolution->sum(fn(array $ligne) => $ligne['quantite'] * ($ligne['prix'] ?? 0));
-        $totalBase = $totalProduits + $mainOeuvres->sum('cout');
+        $totalLignes = $lignes->sum(fn (array $ligne) => $ligne['quantite'] * $ligne['prix_unitaire']);
+        $totalBase = $totalProduits + $mainOeuvres->sum('cout') + $totalLignes;
         $totalApresCoefficient = $totalBase * (1 + $devis->coefficient_difficulte / 100);
 
         $remiseMontant = match ($devis->remise_type) {
@@ -391,6 +459,14 @@ class DevisController extends Controller
             'resolution' => $resolution,
             'visibleQuestionIds' => $visibleQuestionIds,
             'mainOeuvres' => $mainOeuvres,
+            'lignes' => [
+                'prestation' => $lignes->where('categorie', DevisLigne::CATEGORIE_PRESTATION)->values(),
+                'fourniture' => $lignes->where('categorie', DevisLigne::CATEGORIE_FOURNITURE)->values(),
+            ],
+            'catalogues' => [
+                'prestation' => PrestationCatalogue::all(),
+                'fourniture' => FournitureCatalogue::all(),
+            ],
             'totaux' => $totaux,
             'tauxHoraires' => $tauxHoraires,
         ]);
