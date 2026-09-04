@@ -94,9 +94,10 @@ test('les prestations et fournitures alimentent le Resultat', function () {
         'libelle' => 'EPDM', 'quantite' => 10, 'prix_unitaire' => 14.50,
     ]);
 
-    // 650 + (10 x 14,50) = 795
+    // Prestation 650 (sans marge) + fourniture 10 × 14,50 × 1,30 (tarif pro par
+    // défaut) = 650 + 188,50 = 838,50
     $this->get(route('franchise.devis.show', $devis))
-        ->assertInertia(fn ($page) => $page->where('totaux.total_ht', fn ($v) => (float) $v === 795.0));
+        ->assertInertia(fn ($page) => $page->where('totaux.total_ht', fn ($v) => (float) $v === 838.5));
 });
 
 test('le payload show groupe les lignes par categorie et expose les catalogues', function () {

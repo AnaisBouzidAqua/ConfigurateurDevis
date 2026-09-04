@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Franchise;
 
 use App\Catalogues\FournitureCatalogue;
+use App\Catalogues\PolitiqueTarifaire;
 use App\Catalogues\PrestationCatalogue;
 use App\Http\Controllers\Controller;
 use App\Models\Scenario;
@@ -306,15 +307,12 @@ class DevisController extends Controller
 
 
     /**
-     * Enregistre le coefficient de difficulté et la remise commerciale
-     * saisis manuellement pour ce devis.
+     * Enregistre le coefficient de difficulté saisi manuellement pour ce devis.
      */
     public function updateTarification(Request $request, Devis $devis)
     {
         $validated = $request->validate([
             'coefficient_difficulte' => 'required|integer|min:0',
-            'remise_valeur' => 'nullable|numeric|min:0',
-            'remise_type' => 'nullable|in:montant,pourcentage',
         ]);
 
         $devis->update($validated);
@@ -337,6 +335,12 @@ class DevisController extends Controller
 
         $resolution = collect();
         $visibleQuestionIds = collect();
+
+        // Marge appliquée aux prix d'achat des produits et fournitures (pas aux
+        // prestations de service ni à la main d'œuvre), selon le type de tarif
+        // déduit du Dossier.
+        $typeTarif = $devis->typeTarif();
+        $facteurMarge = PolitiqueTarifaire::facteurMarge($typeTarif);
 
         if ($devis->scenario) {
             $reponses = $devis->reponses->pluck('question_option_id', 'question_id')->toArray();
@@ -368,7 +372,7 @@ class DevisController extends Controller
             $produits = Produit::whereIn('ref', $refsOriginales->merge($refsSouhaitees)->unique())
                 ->get()->keyBy('ref');
 
-            $resolution = $lignes->map(function (array $ligne) use ($produits, $refEffective) {
+            $resolution = $lignes->map(function (array $ligne) use ($produits, $refEffective, $facteurMarge) {
                 // Un produit libre porte son propre nom/prix, saisis directement
                 // sur la réponse — pas de recherche dans le catalogue.
                 if ($ligne['produit_ref'] === null) {
@@ -405,20 +409,24 @@ class DevisController extends Controller
                     'produit_ref' => $refResolue,
                     'quantite' => $ligne['quantite'],
                     'nom' => $nom,
-                    'prix' => $produit->prix ?? null,
+                    'prix' => $produit ? round($produit->prix * $facteurMarge, 2) : null,
                 ];
             })->values();
         }
 
         $tauxHoraires = TauxHoraire::orderBy('id')->get();
 
+        // prix_unitaire renvoyé = prix effectif affiché : la marge est appliquée
+        // aux fournitures (prix d'achat figé en base), pas aux prestations.
         $lignes = $devis->lignes()->orderBy('id')->get()->map(fn (DevisLigne $ligne) => [
             'id' => $ligne->id,
             'categorie' => $ligne->categorie,
             'produit_ref' => $ligne->produit_ref,
             'libelle' => $ligne->libelle,
             'quantite' => $ligne->quantite,
-            'prix_unitaire' => (float) $ligne->prix_unitaire,
+            'prix_unitaire' => $ligne->categorie === DevisLigne::CATEGORIE_FOURNITURE
+                ? round($ligne->prix_unitaire * $facteurMarge, 2)
+                : (float) $ligne->prix_unitaire,
         ]);
 
         $mainOeuvres = $devis->mainOeuvres()->with('heures')->get()->map(fn (DevisMainOeuvre $mo) => [
@@ -438,15 +446,10 @@ class DevisController extends Controller
         $totalBase = $totalProduits + $mainOeuvres->sum('cout') + $totalLignes;
         $totalApresCoefficient = $totalBase * (1 + $devis->coefficient_difficulte / 100);
 
-        $remiseMontant = match ($devis->remise_type) {
-            'pourcentage' => $totalApresCoefficient * ($devis->remise_valeur ?? 0) / 100,
-            default => $devis->remise_valeur ?? 0,
-        };
-
         // Le Récapitulatif n'affiche plus qu'un seul montant (« Résultat ») :
-        // la TVA et le TTC ne sont plus calculés.
+        // la TVA et le TTC ne sont plus calculées, ni la remise commerciale.
         $totaux = [
-            'total_ht' => round(max(0, $totalApresCoefficient - $remiseMontant), 2),
+            'total_ht' => round($totalApresCoefficient, 2),
         ];
 
         // Persiste le total recalculé sur le devis lui-même, pour que
@@ -469,6 +472,10 @@ class DevisController extends Controller
             ],
             'totaux' => $totaux,
             'tauxHoraires' => $tauxHoraires,
+            'tarif' => [
+                'type' => $typeTarif,
+                'taux_marge' => PolitiqueTarifaire::taux()[$typeTarif],
+            ],
         ]);
     }
 }

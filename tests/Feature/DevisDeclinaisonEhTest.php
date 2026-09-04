@@ -29,6 +29,13 @@ beforeEach(function () {
     Produit::create(['ref' => 'BFV10EH', 'nom' => 'KIT BAC PEHD', 'prix' => 5145.82]);
 });
 
+// Un devis sans champ « installateur » est facturé au tarif pro (marge 30 %) :
+// le prix affiché est le prix catalogue majoré.
+function prixTarifPro(float $prixCatalogue): float
+{
+    return round($prixCatalogue * 1.30, 2);
+}
+
 test('resout la declinaison EH qui correspond a la capacite EH du devis', function () {
     $devis = creerDevisAvecProduitEh(capaciteEh: 10, refConfiguree: 'BFV2.5EH');
 
@@ -36,7 +43,7 @@ test('resout la declinaison EH qui correspond a la capacite EH du devis', functi
 
     $reponse->assertInertia(fn ($page) => $page
         ->where('resolution.0.produit_ref', 'BFV10EH')
-        ->where('resolution.0.prix', 5145.82)
+        ->where('resolution.0.prix', prixTarifPro(5145.82))
         ->where('resolution.0.nom', 'KIT BAC PEHD (10 EH)'));
 });
 
@@ -47,7 +54,7 @@ test('retombe sur la reference configuree si aucune declinaison ne correspond a 
 
     $reponse->assertInertia(fn ($page) => $page
         ->where('resolution.0.produit_ref', 'BFV2.5EH')
-        ->where('resolution.0.prix', 1231.34));
+        ->where('resolution.0.prix', prixTarifPro(1231.34)));
 });
 
 test('garde la reference configuree quand le devis n a pas de capacite EH', function () {
@@ -57,5 +64,5 @@ test('garde la reference configuree quand le devis n a pas de capacite EH', func
 
     $reponse->assertInertia(fn ($page) => $page
         ->where('resolution.0.produit_ref', 'BFV5EH')
-        ->where('resolution.0.prix', 2572.91));
+        ->where('resolution.0.prix', prixTarifPro(2572.91)));
 });
